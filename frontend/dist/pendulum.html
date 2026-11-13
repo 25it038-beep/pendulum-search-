@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090a0c">
+<title>Pendulum Search — Explore the world</title>
+<meta name="description" content="Pendulum Search by HS AI Solutions. Explore the web, discover knowledge and get useful answers.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{
+ --bg:#090a0c;--surface:#111316;--surface2:#171a1e;--surface3:#20242a;
+ --text:#f3f0e9;--muted:#9a9da3;--soft:#c5c7ca;--gold:#d2b477;--gold2:#f0dcae;
+ --line:rgba(210,180,119,.22);--blue:#9bb8e8;--green:#a9c6a5;--radius:18px;
+ --shadow:0 18px 55px rgba(0,0,0,.42);
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:14px "DM Sans",sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 50% 8%,rgba(180,145,77,.12),transparent 38%),radial-gradient(ellipse at 100% 85%,rgba(87,108,139,.07),transparent 35%)}
+button,input{font:inherit}button{cursor:pointer}
+a{color:inherit}
+.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,54px);border-bottom:1px solid rgba(255,255,255,.055);position:relative;z-index:10;background:rgba(9,10,12,.72);backdrop-filter:blur(18px)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-mark{width:35px;height:35px;border:1px solid rgba(210,180,119,.65);border-radius:12px;display:grid;place-items:center;color:var(--gold2);font:800 14px Manrope;letter-spacing:-1px;box-shadow:inset 0 0 18px rgba(210,180,119,.08);transform:rotate(-5deg)}
+.brand-name{font:800 16px Manrope;letter-spacing:-.6px}.brand-name span{color:var(--gold)}
+.header-right{display:flex;align-items:center;gap:18px}.header-link{font-size:12px;color:#c0c2c4;text-decoration:none}.header-link:hover{color:var(--gold2)}
+.icon-btn{width:38px;height:38px;border:0;border-radius:50%;background:transparent;color:#c1c3c6;display:grid;place-items:center;font-size:18px;transition:.2s}
+.icon-btn:hover{background:rgba(255,255,255,.08);color:var(--gold2)}
+.signin{border:1px solid rgba(210,180,119,.48);background:linear-gradient(120deg,rgba(210,180,119,.19),rgba(210,180,119,.07));color:var(--gold2);border-radius:999px;padding:10px 18px;font-size:12px;font-weight:700;transition:.25s}
+.signin:hover{background:rgba(210,180,119,.25);transform:translateY(-1px)}
+main{min-height:calc(100vh - 180px);display:flex;flex-direction:column;align-items:center;padding:clamp(80px,15vh,145px) 20px 45px;transition:padding .4s}
+.hero{text-align:center;width:100%;max-width:900px;animation:heroIn .8s cubic-bezier(.2,.8,.2,1) both}
+.logo{font:800 clamp(54px,9vw,82px)/1 Manrope;letter-spacing:-5px;margin:0 0 19px;display:inline-flex;gap:13px;align-items:center}
+.logo .hs{color:var(--gold2);text-shadow:0 0 38px rgba(210,180,119,.17)}
+.logo .search{color:#e9e5dc}
+.logo-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block;margin:0 0 3px 2px;box-shadow:0 0 15px rgba(210,180,119,.65)}
+.tagline{color:var(--muted);font-size:13px;letter-spacing:.25px;margin:0 0 32px}
+.search-shell{width:min(650px,100%);margin:0 auto;position:relative;z-index:5}
+.searchbox{height:58px;border:1px solid rgba(210,180,119,.27);border-radius:999px;background:rgba(18,20,23,.94);display:flex;align-items:center;padding:0 15px 0 20px;gap:12px;box-shadow:0 12px 42px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.015);transition:border-color .25s,box-shadow .25s,transform .25s}
+.searchbox:hover{border-color:rgba(210,180,119,.48);box-shadow:0 15px 48px rgba(0,0,0,.34),0 0 0 4px rgba(210,180,119,.035)}
+.searchbox:focus-within{border-color:rgba(240,220,174,.8);box-shadow:0 0 0 5px rgba(210,180,119,.08),0 16px 50px rgba(0,0,0,.4);transform:translateY(-1px)}
+.search-svg{color:#aaaeb4;flex:none}
+#query{border:0;outline:0;background:transparent;color:var(--text);font-size:15px;flex:1;min-width:0}
+#query::placeholder{color:#858a91}
+.search-tools{display:flex;align-items:center;gap:3px}
+.tool{border:0;background:transparent;color:#aeb2b8;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;transition:.2s}
+.tool:hover{background:rgba(255,255,255,.08);color:var(--gold2)}
+.tool svg{width:19px;height:19px}
+.search-submit{height:40px;padding:0 18px;border:0;border-radius:999px;background:linear-gradient(125deg,#ead6a8,#bd9b5e);color:#17150f;font-weight:700;font-size:12px;box-shadow:0 5px 18px rgba(189,155,94,.15);transition:.22s}
+.search-submit:hover{transform:translateY(-1px);filter:brightness(1.08);box-shadow:0 8px 22px rgba(189,155,94,.24)}
+.suggestions{position:absolute;top:calc(100% + 7px);left:0;right:0;background:#15181c;border:1px solid var(--line);border-radius:20px;padding:8px;box-shadow:var(--shadow);display:none;overflow:hidden;animation:drop .18s ease both}
+.suggestions.show{display:block}
+.suggestion{display:flex;align-items:center;gap:13px;padding:11px 13px;border-radius:11px;color:#d1d2d3;cursor:pointer;text-align:left}
+.suggestion:hover{background:rgba(255,255,255,.06)}
+.suggestion svg{color:#8c929a;flex:none}
+.search-actions{display:flex;justify-content:center;gap:12px;margin-top:25px}
+.action{height:38px;padding:0 17px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.045);color:#d1d1ce;font-size:12px;transition:.22s}
+.action:hover{border-color:var(--line);background:rgba(210,180,119,.08);color:var(--gold2);transform:translateY(-2px)}
+.language{margin-top:27px;color:#777e86;font-size:11px}.language a{color:var(--gold);text-decoration:none}.language a:hover{text-decoration:underline}
+.shortcuts{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:35px}
+.shortcut{width:82px;border:0;background:transparent;color:#b6b9bd;display:flex;flex-direction:column;align-items:center;gap:9px;padding:8px 4px;border-radius:14px;transition:.2s;font-size:11px}
+.shortcut:hover{background:rgba(255,255,255,.045);color:var(--gold2);transform:translateY(-3px)}
+.shortcut-icon{width:43px;height:43px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(145deg,#1b1e22,#111316);border-radius:15px;display:grid;place-items:center;color:var(--gold2);font-size:17px}
+.results-wrap{display:none;width:min(760px,100%);margin:58px auto 0;animation:rise .4s ease both}
+.result-nav{display:flex;align-items:center;gap:22px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap}
+.result-tab{background:none;border:0;color:#999fa6;padding:13px 2px 12px;font-size:12px;border-bottom:2px solid transparent;transition:.2s}
+.result-tab:hover,.result-tab.active{color:var(--gold2)}.result-tab.active{border-color:var(--gold)}
+.result-meta{font-size:11px;color:#858b92;margin:17px 0}
+.ai-card{border:1px solid var(--line);border-radius:17px;padding:20px 22px;margin:20px 0;background:linear-gradient(130deg,rgba(210,180,119,.09),rgba(255,255,255,.018));box-shadow:0 12px 40px rgba(0,0,0,.14)}
+.ai-heading{display:flex;align-items:center;gap:9px;color:var(--gold2);font:700 12px Manrope;margin-bottom:12px}
+.ai-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#17150f;background:var(--gold);padding:4px 7px;border-radius:5px}
+.ai-text{font-size:13px;line-height:1.8;color:#d1d2d1}
+.result{padding:18px 0;border-bottom:1px solid rgba(255,255,255,.065);animation:rise .35s ease both}
+.result-source{font-size:11px;color:#a3b89e;margin-bottom:7px}
+.result-title{font:600 18px Manrope;color:#d9c18f;text-decoration:none;letter-spacing:-.3px}
+.result-title:hover{text-decoration:underline;color:var(--gold2)}
+.result-snippet{font-size:13px;line-height:1.7;color:#aeb2b7;margin:8px 0 0}
+.empty-note{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:17px;color:#aeb2b7;font-size:13px;line-height:1.7}
+footer{background:#0d0f11;border-top:1px solid rgba(255,255,255,.06);color:#777e86;margin-top:auto}
+.footer-top{padding:16px clamp(20px,5vw,65px);border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+.footer-bottom{min-height:52px;padding:0 clamp(20px,5vw,65px);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.footer-links{display:flex;gap:22px;flex-wrap:wrap}.footer-links a{font-size:11px;color:#858b92;text-decoration:none}.footer-links a:hover{color:var(--gold2)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(7px);z-index:30;display:none;place-items:center;padding:20px}
+.modal-backdrop.open{display:grid}
+.modal{width:min(440px,100%);background:#171a1e;border:1px solid var(--line);border-radius:19px;padding:23px;box-shadow:var(--shadow);animation:rise .25s ease}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}.modal h2{font:700 17px Manrope;margin:0}.modal p{color:var(--muted);font-size:12px;line-height:1.65}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-top:1px solid rgba(255,255,255,.07);font-size:13px;color:#d0d1d2}
+.select{background:#22262b;color:#e8e8e8;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px}
+.toast{position:fixed;bottom:23px;left:50%;transform:translate(-50%,15px);opacity:0;background:#25292e;border:1px solid var(--line);color:#eee4d0;padding:11px 16px;border-radius:10px;font-size:12px;transition:.25s;z-index:40;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+.hidden{display:none!important}
+@keyframes heroIn{from{opacity:0;transform:translateY(17px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes drop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:650px){.topbar{height:64px}.header-right{gap:8px}.header-link{display:none}.logo{letter-spacing:-3px;gap:9px}.searchbox{height:54px;padding-left:15px;gap:8px}.search-submit{display:none}.search-tools{gap:0}.shortcuts{gap:3px}.shortcut{width:69px}.result-nav{gap:17px}.footer-bottom{padding-top:14px;padding-bottom:14px;justify-content:center}.footer-links{justify-content:center;gap:15px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <a class="brand" href="/" aria-label="Pendulum Search home"><span class="brand-mark">HS</span><span class="brand-name">PENDULUM <span>SEARCH</span></span></a>
+ <div class="header-right">
+  <a class="header-link" href="#about">About</a><a class="header-link" href="#how">How Search works</a>
+  <button class="icon-btn" id="appsBtn" aria-label="HS apps" title="HS apps">⠿</button>
+  <button class="icon-btn" id="settingsBtn" aria-label="Settings" title="Settings">⚙</button>
+  <button class="signin" id="signinBtn">Sign in</button>
+ </div>
+</header>
+<main>
+<section class="hero">
+ <h1 class="logo"><span class="hs">Pendulum</span><span class="search">Search<span class="logo-dot"></span></span></h1>
+ <p class="tagline">Explore the web. Discover what matters.</p>
+ <div class="search-shell">
+  <form id="searchForm">
+   <div class="searchbox">
+    <svg class="search-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 5 5"/></svg>
+    <input id="query" type="search" autocomplete="off" placeholder="Search the web or enter a URL" aria-label="Search the web">
+    <div class="search-tools">
+     <button type="button" class="tool" id="clearBtn" title="Clear" aria-label="Clear search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+     <button type="button" class="tool" id="voiceBtn" title="Voice search" aria-label="Voice search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8"/></svg></button>
+     <button type="button" class="tool" id="imageBtn" title="Search by image" aria-label="Search by image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
+     <input type="file" id="imageInput" accept="image/*" class="hidden">
+    </div>
+    <button class="search-submit" type="submit">Search&nbsp; ↗</button>
+   </div>
+   <div class="suggestions" id="suggestions"></div>
+  </form>
+  <div class="search-actions"><button class="action" type="button" id="searchBtn">HS Search</button><button class="action" type="button" id="luckyBtn">I'm Feeling Curious</button></div>
+ </div>
+ <div class="language">Search powered by <a href="#about">HS AI Solutions</a> &nbsp;·&nbsp; AI overview by <a href="#how">July</a></div>
+ <div class="shortcuts" aria-label="Search categories">
+  <button class="shortcut" data-query="Latest world news"><span class="shortcut-icon">◉</span>News</button>
+  <button class="shortcut" data-query="Explore images"><span class="shortcut-icon">▧</span>Images</button>
+  <button class="shortcut" data-query="Educational videos"><span class="shortcut-icon">▷</span>Videos</button>
+  <button class="shortcut" data-query="Research papers"><span class="shortcut-icon">⌕</span>Research</button>
+  <button class="shortcut" data-query="Places near Chennai"><span class="shortcut-icon">⌖</span>Maps</button>
+  <button class="shortcut" data-query="Popular books"><span class="shortcut-icon">▤</span>Books</button>
+ </div>
+</section>
+<section class="results-wrap" id="results" aria-live="polite">
+ <nav class="result-nav" id="resultTabs" aria-label="Search result types">
+  <button class="result-tab active" data-type="All">All</button><button class="result-tab" data-type="Images">Images</button><button class="result-tab" data-type="News">News</button><button class="result-tab" data-type="Videos">Videos</button><button class="result-tab" data-type="Maps">Maps</button><button class="result-tab" data-type="Shopping">Shopping</button><button class="result-tab" data-type="Books">Books</button><button class="result-tab" data-type="Research">Research</button>
+ </nav>
+ <div class="result-meta" id="resultMeta">Search results</div><div id="aiSlot"></div><div id="resultList"></div>
+</section>
+</main>
+<footer id="about">
+ <div class="footer-top">Global search · Pendulum Search · HS AI Solutions · <span style="color:var(--gold)">Obsidian & Champagne</span></div>
+ <div class="footer-bottom"><div class="footer-links"><a href="#about">About HS Search</a><a href="#about">Privacy</a><a href="#about">Terms</a><a href="#how">How Search works</a></div><div class="footer-links"><a href="#about">Advertising</a><a href="#about">Business</a><a href="#about">Feedback</a></div></div>
+</footer>
+<div class="modal-backdrop" id="settingsModal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+ <div class="modal-head"><h2 id="settingsTitle">Search settings</h2><button class="icon-btn" id="closeSettings" aria-label="Close">×</button></div>
+ <p>Adjust how HS Search displays and processes your searches.</p>
+ <div class="setting-row"><span>AI overview</span><select class="select" id="aiSetting"><option value="on">Enabled</option><option value="off">Disabled</option></select></div>
+ <div class="setting-row"><span>Results per page</span><select class="select" id="limitSetting"><option>10</option><option>20</option><option>50</option></select></div>
+ <div class="setting-row"><span>Safe search</span><select class="select" id="safeSetting"><option>Moderate</option><option>Strict</option><option>Off</option></select></div>
+ <p>Settings are currently stored for this page session. Connect your account/preferences API to persist them across devices.</p>
+</div></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/*
+ HS SEARCH BACKEND CONTRACT
+ Set API_BASE to your deployed Pendulum Search API origin.
+ POST /api/search
+ Request: {query, type, aiOverview, safeSearch, limit}
+ Response: {results:[{title,url,snippet,source,publishedAt}], answer, total}
+ Optional GET /api/suggestions?q=... -> {suggestions:["..."]}
+ Keep NVIDIA/model credentials server-side. The browser must call only your HS backend.
+*/
+const API_BASE = ""; // Relative origin
+const $=id=>document.getElementById(id);
+const form=$("searchForm"),input=$("query"),results=$("results"),suggestions=$("suggestions");
+let activeType="All",aiEnabled=true,requestNo=0,suggestionTimer;
+const historyItems=JSON.parse(sessionStorage.getItem("hsSearchHistory")||"[]");
+function toast(msg){$("toast").textContent=msg;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2600)}
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function safeUrl(s){try{const u=new URL(s);return ["https:","http:"].includes(u.protocol)?u.href:"#"}catch{return "#"}}
+function closeSuggestions(){suggestions.classList.remove("show");suggestions.innerHTML=""}
+function showSuggestions(items){
+ suggestions.innerHTML="";(items||[]).slice(0,7).forEach(text=>{const row=document.createElement("div");row.className="suggestion";row.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 5 5"/></svg><span>'+esc(text)+'</span>';row.addEventListener("click",()=>{input.value=text;closeSuggestions();runSearch()});suggestions.appendChild(row)});
+ if(items?.length)suggestions.classList.add("show");else closeSuggestions();
+}
+input.addEventListener("input",()=>{
+ const q=input.value.trim();if(!q){closeSuggestions();return}
+ clearTimeout(suggestionTimer);
+ suggestionTimer=setTimeout(async()=>{
+  if(API_BASE !== undefined){
+   try{const r=await fetch((API_BASE ? API_BASE.replace(/\/$/,"") : "")+"/api/suggestions?q="+encodeURIComponent(q));if(r.ok){const d=await r.json();showSuggestions(d.suggestions||[]);return}}catch{}
+  }
+  const recent=historyItems.filter(x=>x.toLowerCase().includes(q.toLowerCase())).slice(0,5);
+  showSuggestions(recent);
+ },180);
+});
+input.addEventListener("focus",()=>{if(input.value.trim()&&suggestions.children.length)suggestions.classList.add("show")});
+document.addEventListener("click",e=>{if(!e.target.closest(".search-shell"))closeSuggestions()});
+$("clearBtn").onclick=()=>{input.value="";closeSuggestions();input.focus()};
+$("searchBtn").onclick=()=>form.requestSubmit();
+form.addEventListener("submit",e=>{e.preventDefault();runSearch()});
+document.querySelectorAll(".shortcut").forEach(b=>b.addEventListener("click",()=>{input.value=b.dataset.query;runSearch()}));
+document.querySelectorAll(".result-tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".result-tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");activeType=b.dataset.type;if(input.value.trim())runSearch()}));
+$("luckyBtn").onclick=()=>{if(!input.value.trim())input.value="Discover something remarkable in science and technology";runSearch()};
+$("voiceBtn").onclick=()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){toast("Voice search is not supported in this browser.");return}
+ const rec=new SR();rec.lang=navigator.language||"en-US";rec.interimResults=false;
+ rec.onstart=()=>toast("Listening…");rec.onresult=e=>{input.value=e.results[0][0].transcript;runSearch()};rec.onerror=()=>toast("Voice search could not start.");rec.start();
+};
+$("imageBtn").onclick=()=>$("imageInput").click();
+$("imageInput").onchange=e=>{const f=e.target.files[0];if(f){toast("Image selected: "+f.name+" — analyzing visually with HS July Vision...");input.value="Visual Search: "+f.name;runSearch();}e.target.value=""};
+$("settingsBtn").onclick=()=>$("settingsModal").classList.add("open");
+$("closeSettings").onclick=()=>$("settingsModal").classList.remove("open");
+$("settingsModal").onclick=e=>{if(e.target===$("settingsModal"))$("settingsModal").classList.remove("open")};
+$("aiSetting").onchange=e=>{aiEnabled=e.target.value==="on";toast("AI overview "+(aiEnabled?"enabled":"disabled"))};
+$("appsBtn").onclick=()=>toast("HS AI Suite: July LLM, Gravity Research, MegaCrawler, Studio");
+$("signinBtn").onclick=()=>toast("Signed in as Harshan Seliyan (Founder Session)");
+document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==input){e.preventDefault();input.focus()}if(e.key==="Escape"){closeSuggestions();$("settingsModal").classList.remove("open")}});
+async function runSearch(){
+ const query=input.value.trim();if(!query){input.focus();return}
+ closeSuggestions();const id=++requestNo;results.style.display="block";results.scrollIntoView({behavior:"smooth",block:"start"});
+ $("resultMeta").textContent="Searching Pendulum Search…";$("aiSlot").innerHTML="";$("resultList").innerHTML='<div class="empty-note">Searching the web for “'+esc(query)+'”…</div>';
+ historyItems.unshift(query);const unique=[...new Set(historyItems)].slice(0,12);historyItems.splice(0,historyItems.length,...unique);sessionStorage.setItem("hsSearchHistory",JSON.stringify(unique));
+ try{
+  const endpoint = (API_BASE ? API_BASE.replace(/\/$/,"") : "") + "/api/search";
+  const res=await fetch(endpoint,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      query,
+      type:activeType,
+      aiOverview:aiEnabled,
+      safeSearch:$("safeSetting").value.toLowerCase(),
+      limit:Number($("limitSetting").value)
+    })
+  });
+  if(!res.ok)throw Error("Search API returned "+res.status);
+  const data=await res.json();if(id!==requestNo)return;const items=Array.isArray(data.results)?data.results:[];
+  $("resultMeta").textContent=(data.total??items.length)+" results · Pendulum Search (Execution: " + (data.execution_time_ms ? data.execution_time_ms + "ms" : "real-time") + ")";
+  if(aiEnabled&&data.answer){const card=document.createElement("div");card.className="ai-card";card.innerHTML='<div class="ai-heading">✦ HS AI Overview <span class="ai-badge">July</span></div><div class="ai-text">'+esc(data.answer)+'</div>'; $("aiSlot").appendChild(card)}
+  $("resultList").innerHTML="";
+  if(!items.length){$("resultList").innerHTML='<div class="empty-note">No matching results were returned. Try a different query or check your index coverage.</div>';return}
+  items.forEach((item,i)=>{const url=safeUrl(item.url||"");let host=item.source||(()=>{try{return new URL(url).hostname}catch{return "Source"}})();const el=document.createElement("article");el.className="result";el.style.animationDelay=(i*35)+"ms";el.innerHTML='<div class="result-source">'+esc(host)+(item.publishedAt?" · "+esc(item.publishedAt):"")+'</div><a class="result-title" href="'+url+'" target="_blank" rel="noopener noreferrer">'+esc(item.title||"Untitled result")+'</a><p class="result-snippet">'+esc(item.snippet||"")+'</p>';$("resultList").appendChild(el)});
+ }catch(err){if(id!==requestNo)return;$("resultMeta").textContent="Search service unavailable";$("resultList").innerHTML='<div class="empty-note">Could not connect to HS Search. Check the API URL, CORS settings and backend status.<br><small>'+esc(err.message)+'</small></div>'}
+}
+</script>
+</body>
+</html>

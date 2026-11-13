@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  hs-backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: hs_search_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - HS_HOST=0.0.0.0
+      - HS_PORT=8000
+      - USE_OPENSEARCH=false
+      - OPENSEARCH_URL=http://opensearch:9200
+      - USE_QDRANT=false
+      - QDRANT_URL=http://qdrant:6333
+      - CRAWLER_MAX_CONCURRENCY=12
+      - CRAWLER_DOMAIN_DELAY_SEC=1.0
+    volumes:
+      - hs_search_data:/app/data
+    networks:
+      - hs_network
+
+  hs-frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: hs_search_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - hs-backend
+    networks:
+      - hs_network
+
+  # Optional Distributed Full-Text Engine
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    container_name: hs_opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - hs_opensearch_data:/usr/share/opensearch/data
+    networks:
+      - hs_network
+
+  # Optional Distributed Vector Engine
+  qdrant:
+    image: qdrant/qdrant:v1.8.4
+    container_name: hs_qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - hs_qdrant_data:/qdrant/storage
+    networks:
+      - hs_network
+
+volumes:
+  hs_search_data:
+  hs_opensearch_data:
+  hs_qdrant_data:
+
+networks:
+  hs_network:
+    driver: bridge
