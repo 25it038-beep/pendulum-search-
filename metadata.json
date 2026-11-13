@@ -1,0 +1,11 @@
+{
+  "name": "Pendulum Search",
+  "description": "Hybrid AI-powered search engine by HS AI Solutions combining Pendulum's proprietary web index, open web retrieval, spatial geosearch, and July & Gravity grounded AI Overviews.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

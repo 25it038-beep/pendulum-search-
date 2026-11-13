@@ -16,9 +16,9 @@ Scoring Components:
   completeness (0.05) — Content richness (title + snippet length + images)
 
 Source labels:
-  Pendulum native only  → "Pendulum Indexed"
-  External only         → "External Search"
-  Both providers        → "Multiple Sources"
+  Pendulum native only            → "Pendulum Indexed"
+  DuckDuckGo unmerged             → "DuckDuckGo"
+  DuckDuckGo enhanced / merged    → "DuckDuckGo · Pendulum Enhanced"
 """
 
 import math
@@ -56,8 +56,9 @@ _MEDIUM_AUTHORITY = frozenset({
 })
 
 _PROVIDER_WEIGHTS = {
-    "pendulum": 1.20,  # Pendulum native index
-    "external": 1.00,  # External (DDG / SearXNG)
+    "pendulum": 1.15,   # Pendulum native index & enrichment
+    "external": 1.25,   # DuckDuckGo primary supplement
+    "primaryWeb": 1.50, # Genuine primary organic web search (DuckDuckGo)
 }
 
 _RRF_K = 60  # Standard RRF constant
@@ -100,7 +101,7 @@ class HybridResult:
     final_score: float = 0.0
 
     # Display metadata
-    source_label: str = "External Search"
+    source_label: str = "DuckDuckGo"
     favicon: str = ""
     images: List[Dict] = field(default_factory=list)
     location: Optional[Dict] = None
@@ -115,6 +116,8 @@ class HybridResult:
     _raw_text_score: float = 0.0
     _raw_semantic_score: float = 0.0
     _raw_geo_score: float = 0.0
+    original_rank: Optional[int] = None
+    provider_type: str = "external_supplement"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -322,7 +325,14 @@ class HybridRanker:
             score += 0.2
         return min(1.0, score)
 
+    def _original_rank_score(self, result: HybridResult) -> float:
+        p_rank = result.provider_ranks.get("primaryWeb") or result.original_rank
+        if not p_rank or p_rank <= 0:
+            return 0.0
+        return round(1.0 / (1.0 + 0.14 * (p_rank - 1)), 4)
+
     def compute_final_score(self, result: HybridResult) -> Dict[str, float]:
+        orig_score = self._original_rank_score(result)
         components = {
             "lexical": self._lexical_score(result),
             "semantic": self._semantic_score(result),
@@ -332,7 +342,12 @@ class HybridRanker:
             "rrf": self._rrf_score(result),
             "completeness": self._completeness_score(result),
         }
-        final = sum(self.weights.get(k, 0.0) * v for k, v in components.items())
+        base_final = sum(self.weights.get(k, 0.0) * v for k, v in components.items())
+        if orig_score > 0:
+            final = 0.72 * base_final + 0.28 * orig_score
+            components["originalRank"] = orig_score
+        else:
+            final = base_final
         components["final"] = round(min(1.0, max(0.0, final)), 4)
         return components
 
@@ -340,13 +355,17 @@ class HybridRanker:
     # Source label
     # -------------------------------------------------------------------------
 
-    def _source_label(self, sources: List[str]) -> str:
+    def _source_label(self, sources: List[str], provider_type: str = "") -> str:
         has_pendulum = "pendulum" in sources
         has_external = "external" in sources
         if has_pendulum and has_external:
-            return "Multiple Sources"
+            return "DuckDuckGo · Pendulum Enhanced"
+        if has_external and provider_type == "primary_web_search":
+            return "DuckDuckGo · Pendulum Enhanced"
         if has_pendulum:
             return "Pendulum Indexed"
+        if has_external:
+            return "DuckDuckGo"
         return "External Search"
 
     # -------------------------------------------------------------------------
@@ -443,12 +462,20 @@ class HybridRanker:
             title = item.get("title", "")
             domain = item.get("domain") or self._extract_domain(url)
 
+            orig_rank = item.get("original_rank") or item.get("originalRank")
+            p_type = item.get("provider_type") or item.get("providerType") or "external_supplement"
+
             if can in seen_canonical:
                 # Same canonical URL — merge metadata
                 existing = seen_canonical[can]
                 if "external" not in existing.sources:
                     existing.sources.append("external")
                 existing.provider_ranks["external"] = rank + 1
+                if orig_rank:
+                    existing.original_rank = orig_rank
+                    existing.provider_ranks["primaryWeb"] = orig_rank
+                if p_type == "primary_web_search":
+                    existing.provider_type = "primary_web_search"
                 # Enrich snippet if external has a better one
                 if len(item.get("snippet", "")) > len(existing.snippet):
                     existing.snippet = item["snippet"]
@@ -466,6 +493,10 @@ class HybridRanker:
             if isinstance(idx_at, str):
                 idx_at = self._parse_dt(idx_at)
 
+            ranks_map: Dict[str, int] = {"external": rank + 1}
+            if orig_rank:
+                ranks_map["primaryWeb"] = int(orig_rank)
+
             hr = HybridResult(
                 id=rid,
                 title=title,
@@ -478,7 +509,7 @@ class HybridRanker:
                 published_str="",
                 indexed_str="",
                 sources=["external"],
-                provider_ranks={"external": rank + 1},
+                provider_ranks=ranks_map,
                 is_live=False,
                 language=item.get("language", "en"),
                 category=item.get("category", "general"),
@@ -486,6 +517,8 @@ class HybridRanker:
                 _raw_text_score=float(item.get("score", 0.5)),
                 _raw_semantic_score=0.0,
                 _raw_geo_score=0.0,
+                original_rank=int(orig_rank) if orig_rank else None,
+                provider_type=p_type,
             )
             seen_canonical[can] = hr
 
@@ -499,7 +532,7 @@ class HybridRanker:
             scores = self.compute_final_score(hr)
             hr.scores = scores
             hr.final_score = scores["final"]
-            hr.source_label = self._source_label(hr.sources)
+            hr.source_label = self._source_label(hr.sources, hr.provider_type)
             hr.favicon = f"https://www.google.com/s2/favicons?domain={hr.domain}&sz=32"
 
         final_list.sort(key=lambda r: r.final_score, reverse=True)

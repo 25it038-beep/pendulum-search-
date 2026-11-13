@@ -10,12 +10,13 @@ import {
   seedCrawlerAPI, crawlNowAPI, toggleCrawlerAPI,
   fetchSourcesAPI, triggerConnectorAPI, fetchDiscoveryGapsAPI,
   fetchCoverageAPI, fetchSystemHealthAPI, triggerBackupAPI,
-  fetchAdminGatewayHealthAPI, fetchAdminGatewayStatsAPI, testAdminGatewayInferenceAPI
+  fetchAdminGatewayHealthAPI, fetchAdminGatewayStatsAPI, testAdminGatewayInferenceAPI,
+  fetchAdminQualityDashboardAPI, fetchAdminDiagnosticsAPI, runAcceptanceAPI
 } from '../services/api';
 import { SystemMetrics, LiveFeed, SourceRegistryItem, DiscoveryGap } from '../types';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'connectors' | 'coverage' | 'health' | 'gateway'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'connectors' | 'coverage' | 'health' | 'gateway' | 'quality'>('overview');
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [crawlerActive, setCrawlerActive] = useState<boolean>(true);
   const [liveMonitorActive, setLiveMonitorActive] = useState<boolean>(true);
@@ -35,6 +36,14 @@ export const AdminDashboard: React.FC = () => {
   const [testPrompt, setTestPrompt] = useState<string>('Briefly explain quantum computing in one sentence.');
   const [testResult, setTestResult] = useState<any>(null);
   const [testLoading, setTestLoading] = useState<boolean>(false);
+
+  // IR Quality & Diagnostics State
+  const [qualityDashboard, setQualityDashboard] = useState<any>(null);
+  const [diagQuery, setDiagQuery] = useState<string>('RMK Engineering College');
+  const [diagResult, setDiagResult] = useState<any>(null);
+  const [diagLoading, setDiagLoading] = useState<boolean>(false);
+  const [acceptanceReport, setAcceptanceReport] = useState<any>(null);
+  const [acceptanceLoading, setAcceptanceLoading] = useState<boolean>(false);
 
   // Forms
   const [seedUrlsInput, setSeedUrlsInput] = useState('');
@@ -70,6 +79,7 @@ export const AdminDashboard: React.FC = () => {
       fetchSystemHealthAPI().then(res => setSystemHealth(res)).catch(() => {});
       fetchAdminGatewayHealthAPI().then(res => setGatewayHealth(res)).catch(() => {});
       fetchAdminGatewayStatsAPI().then(res => setGatewayStats(res)).catch(() => {});
+      fetchAdminQualityDashboardAPI().then(res => setQualityDashboard(res)).catch(() => {});
     } catch (e) {
       console.error(e);
     }
@@ -186,6 +196,31 @@ export const AdminDashboard: React.FC = () => {
     setTestLoading(false);
   };
 
+  const handleRunDiagnosticsTrace = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!diagQuery.trim()) return;
+    setDiagLoading(true);
+    try {
+      const res = await fetchAdminDiagnosticsAPI(diagQuery.trim());
+      setDiagResult(res);
+      fetchAdminQualityDashboardAPI().then(q => setQualityDashboard(q)).catch(() => {});
+    } catch (err: any) {
+      setDiagResult({ error: err.message || 'Diagnostics trace failed' });
+    }
+    setDiagLoading(false);
+  };
+
+  const handleRunAcceptanceSuite = async () => {
+    setAcceptanceLoading(true);
+    try {
+      const res = await runAcceptanceAPI();
+      setAcceptanceReport(res);
+    } catch (err: any) {
+      setAcceptanceReport({ error: err.message || 'Acceptance suite failed' });
+    }
+    setAcceptanceLoading(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
       {/* Top Header */}
@@ -200,7 +235,16 @@ export const AdminDashboard: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Organization: <strong className="text-neutral-200">HS AI Solutions</strong> • Founder: <strong className="text-gold-300">Harshan Seliyan</strong> • AI Intelligence: <strong className="text-gold-300">July LLM</strong>
+            Organization:{' '}
+            <a
+              href="https://hs-ai-studio-4i7i.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-neutral-200 hover:text-gold-300 hover:underline transition-colors"
+            >
+              HS AI Solutions
+            </a>{' '}
+            • Founder: <strong className="text-gold-300">Harshan Seliyan</strong> • AI Intelligence: <strong className="text-gold-300">July LLM</strong>
           </p>
         </div>
 
@@ -297,6 +341,18 @@ export const AdminDashboard: React.FC = () => {
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>AI Inference Gateway</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('quality')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'quality'
+              ? 'bg-gold-400 text-obsidian-950 shadow-gold-glow'
+              : 'text-neutral-400 hover:text-white hover:bg-obsidian-850'
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" />
+          <span>IR Quality &amp; Diagnostics</span>
         </button>
       </div>
 
@@ -848,7 +904,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[
                 { name: 'HS Native Index', type: 'Primary Autonomous', status: 'Healthy', failures: 0 },
-                { name: 'DuckDuckGo Instant Answer API', type: 'External Partner', status: 'Healthy', failures: 0 },
+                { name: 'Open Knowledge Instant Answer API', type: 'External Partner', status: 'Healthy', failures: 0 },
                 { name: 'Wikipedia OpenSearch', type: 'Public Knowledge', status: 'Healthy', failures: 0 },
                 { name: 'HS Safe Instant Answer', type: 'Internal Evaluator', status: 'Healthy', failures: 0 },
                 { name: 'HS News Stream Provider', type: 'Live Feeds', status: 'Healthy', failures: 0 },
@@ -952,6 +1008,400 @@ export const AdminDashboard: React.FC = () => {
                     Prompt: {testResult.tokens.prompt} | Completion: {testResult.tokens.completion}
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: IR QUALITY & DIAGNOSTICS */}
+      {activeTab === 'quality' && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-4">
+              <span className="text-[11px] font-mono text-neutral-400 block mb-1">Wikipedia Top-10 %</span>
+              <div className="text-2xl font-mono font-bold text-gold-300">
+                {qualityDashboard?.irQuality?.wikipediaTop10Pct ?? 0}%
+              </div>
+              <span className="text-[10px] text-neutral-500 font-mono">
+                {qualityDashboard?.irQuality?.samplesEvaluated ?? 0} queries sampled
+              </span>
+            </div>
+
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-4">
+              <span className="text-[11px] font-mono text-neutral-400 block mb-1">Official Discovery Rate</span>
+              <div className="text-2xl font-mono font-bold text-emerald-400">
+                {qualityDashboard?.irQuality?.officialDiscoveryRatePct !== null &&
+                qualityDashboard?.irQuality?.officialDiscoveryRatePct !== undefined
+                  ? `${qualityDashboard.irQuality.officialDiscoveryRatePct}%`
+                  : 'N/A'}
+              </div>
+              <span className="text-[10px] text-neutral-500 font-mono">
+                {qualityDashboard?.irQuality?.officialDiscoveryHits ?? 0}/
+                {qualityDashboard?.irQuality?.officialDiscoveryAttempts ?? 0} entity hits
+              </span>
+            </div>
+
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-4">
+              <span className="text-[11px] font-mono text-neutral-400 block mb-1">All-Tab Media Leaks</span>
+              <div
+                className={`text-2xl font-mono font-bold ${
+                  (qualityDashboard?.irQuality?.mediaLeakCount ?? 0) === 0 ? 'text-emerald-400' : 'text-rose-400'
+                }`}
+              >
+                {qualityDashboard?.irQuality?.mediaLeakCount ?? 0}
+              </div>
+              <span className="text-[10px] text-neutral-500 font-mono">Strict ResultType gate</span>
+            </div>
+
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-4">
+              <span className="text-[11px] font-mono text-neutral-400 block mb-1">Avg Unique Domains</span>
+              <div className="text-2xl font-mono font-bold text-white">
+                {qualityDashboard?.irQuality?.uniqueDomainsAvgTop10 ?? 0}
+              </div>
+              <span className="text-[10px] text-neutral-500 font-mono">Per Top-10 slate</span>
+            </div>
+
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-4">
+              <span className="text-[11px] font-mono text-neutral-400 block mb-1">Pendulum vs External</span>
+              <div className="text-lg font-mono font-bold text-gold-200">
+                {qualityDashboard?.irQuality?.pendulumSharePct ?? 0}% / {qualityDashboard?.irQuality?.externalSharePct ?? 0}%
+              </div>
+              <span className="text-[10px] text-neutral-500 font-mono">Candidate share</span>
+            </div>
+
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-4">
+              <span className="text-[11px] font-mono text-neutral-400 block mb-1">Crawler Indexed</span>
+              <div className="text-2xl font-mono font-bold text-cyan-300">
+                {qualityDashboard?.crawler?.indexedDocumentsCount ?? 0}
+              </div>
+              <span className="text-[10px] text-neutral-500 font-mono">
+                {qualityDashboard?.crawler?.pagesSucceeded ?? 0} crawled / {qualityDashboard?.crawler?.queuedFrontierCount ?? 0} queued
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Domains Histogram */}
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-5">
+              <h3 className="text-sm font-serif font-bold text-gold-300 uppercase tracking-wider mb-3">
+                Top-10 Domains Histogram
+              </h3>
+              {Array.isArray(qualityDashboard?.topDomainsHistogram) && qualityDashboard.topDomainsHistogram.length > 0 ? (
+                <div className="space-y-2">
+                  {qualityDashboard.topDomainsHistogram.map((d: any) => (
+                    <div key={d.domain} className="flex items-center justify-between text-xs font-mono px-3 py-2 rounded-lg bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-200 truncate">{d.domain}</span>
+                      <span className="text-gold-300 font-bold">{d.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-neutral-500">Run searches or diagnostics traces to populate Top-10 domain distribution.</p>
+              )}
+            </div>
+
+            {/* Live RSS Feeds Status */}
+            <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-5">
+              <h3 className="text-sm font-serif font-bold text-gold-300 uppercase tracking-wider mb-3">
+                Live Journalism &amp; Research Feeds
+              </h3>
+              <div className="space-y-2">
+                {(qualityDashboard?.liveFeeds || []).map((f: any) => (
+                  <div key={f.id} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-obsidian-950 border border-obsidian-800">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-white truncate">{f.name}</div>
+                      <div className="text-[10px] font-mono text-neutral-500 truncate">{f.url}</div>
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                        f.status === 'active'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : f.status === 'error'
+                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                      }`}>
+                        {f.status} ({f.itemCount || 0})
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Live Query Diagnostics Trace & Original vs. Enhanced Comparison */}
+          <div className="rounded-2xl bg-obsidian-900 border border-obsidian-800 p-5 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-serif font-bold text-gold-300 uppercase tracking-wider">
+                  Original Web Results vs. Pendulum Enhanced Comparison
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Admin-only pipeline trace verifying query preservation, parser rejections, page enrichment, and ranking deltas.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRunAcceptanceSuite}
+                disabled={acceptanceLoading}
+                className="px-3.5 py-2 rounded-xl bg-obsidian-850 border border-gold-400/35 text-gold-300 hover:bg-gold-400 hover:text-obsidian-950 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 disabled:opacity-50"
+              >
+                {acceptanceLoading ? 'Running 10-Query Suite...' : 'Run 10-Query Acceptance Suite'}
+              </button>
+            </div>
+
+            <form onSubmit={handleRunDiagnosticsTrace} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                value={diagQuery}
+                onChange={(e) => setDiagQuery(e.target.value)}
+                placeholder="Enter query to inspect original provider telemetry, enrichment & final rank deltas..."
+                className="flex-1 bg-obsidian-950 border border-obsidian-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-gold-400 font-mono"
+              />
+              <button
+                type="submit"
+                disabled={diagLoading || !diagQuery.trim()}
+                className="px-4 py-2 rounded-xl bg-gold-400 text-obsidian-950 text-xs font-bold hover:brightness-110 disabled:opacity-50 whitespace-nowrap shrink-0"
+              >
+                {diagLoading ? 'Tracing...' : 'Run IR Trace'}
+              </button>
+            </form>
+
+            {diagResult?.error && (
+              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 font-mono">
+                {diagResult.error}
+              </div>
+            )}
+
+            {diagResult?.diagnostics && (() => {
+              const d = diagResult.diagnostics;
+              const pTel = d.primaryProviderTelemetry;
+              const enh = d.enhancerTelemetry;
+              const comp = d.comparison;
+              const entity = d.queryIntelligence?.recognizedEntity;
+              return (
+                <div className="space-y-4 text-xs font-mono tabular-nums">
+                  {pTel?.limitationNotice && (
+                    <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-200 text-[11px] font-sans leading-relaxed">
+                      <strong className="font-semibold text-amber-300">Primary Web Provider Notice:</strong> {pTel.limitationNotice}
+                    </div>
+                  )}
+
+                  {/* Summary Metrics */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-500 block text-[10px]">Query Preserved</span>
+                      <span className={d.primaryProviderQuery === d.originalQuery ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                        {d.primaryProviderQuery === d.originalQuery ? 'EXACT MATCH' : 'MODIFIED'}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-500 block text-[10px]">Primary Strategy</span>
+                      <span className="text-gold-300 font-semibold truncate block">{pTel?.strategyUsed || 'N/A'}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-500 block text-[10px]">Raw / Parsed / Rej</span>
+                      <span className="text-white font-semibold">
+                        {pTel?.rawOrganicCount ?? 0} / {pTel?.parsedCount ?? 0} / {pTel?.rejectedCount ?? 0}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-500 block text-[10px]">Enriched / Pendulum</span>
+                      <span className="text-cyan-300 font-semibold">
+                        {enh?.enrichedCount ?? 0} / {d.deduplication?.pendulumCandidatesCount ?? 0}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-500 block text-[10px]">Deduped / Quality Rej</span>
+                      <span className="text-white font-semibold">
+                        {d.deduplication?.duplicatesRemoved ?? 0} / {d.deduplication?.filteredOutLowQuality ?? 0}
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                      <span className="text-neutral-500 block text-[10px]">Latency / Entity</span>
+                      <span className="text-emerald-400 font-semibold truncate block">
+                        {d.executionTimeMs}ms {entity?.name ? `· ${entity.name}` : ''}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rejection Reasons if any */}
+                  {((pTel?.rejectedCount > 0) || (enh?.rejectedCount > 0)) && (
+                    <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800 text-[11px] space-y-1">
+                      <div className="text-neutral-400 font-semibold">Parser &amp; Enhancer Rejections:</div>
+                      {pTel?.rejectedCount > 0 && (
+                        <div className="text-amber-300">
+                          Parser rejected: {JSON.stringify(pTel.rejectionReasons)}
+                        </div>
+                      )}
+                      {enh?.rejectedPages?.map((rp: any, idx: number) => (
+                        <div key={idx} className="text-rose-300 truncate">
+                          [{rp.reason}] {rp.domain} — {rp.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Side-by-Side Comparison */}
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {/* Original Provider List */}
+                    <div className="rounded-xl bg-obsidian-950 border border-obsidian-800 overflow-hidden">
+                      <div className="px-3 py-2 border-b border-obsidian-800 text-[11px] text-neutral-400 font-semibold uppercase tracking-wider">
+                        Original Provider Slate ({comp?.originalTop10?.length ?? 0})
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-[11px]">
+                          <thead className="text-neutral-500 border-b border-obsidian-800">
+                            <tr>
+                              <th className="p-2">#</th>
+                              <th className="p-2">Title</th>
+                              <th className="p-2">Domain</th>
+                              <th className="p-2">Stream</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-obsidian-800/70">
+                            {(comp?.originalTop10 || []).map((o: any, i: number) => (
+                              <tr key={i} className="hover:bg-obsidian-900/60">
+                                <td className="p-2 text-neutral-500">{o.originalRank}</td>
+                                <td className="p-2 text-neutral-200 max-w-[220px] truncate">{o.title}</td>
+                                <td className="p-2 text-gold-300/90 max-w-[130px] truncate">{o.domain}</td>
+                                <td className="p-2 text-neutral-500">{o.subProvider}</td>
+                              </tr>
+                            ))}
+                            {(!comp?.originalTop10 || comp.originalTop10.length === 0) && (
+                              <tr>
+                                <td colSpan={4} className="p-4 text-center text-neutral-500">
+                                  No original external results returned for this query.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Pendulum Enhanced Results */}
+                    <div className="rounded-xl bg-obsidian-950 border border-obsidian-800 overflow-hidden">
+                      <div className="px-3 py-2 border-b border-obsidian-800 text-[11px] text-gold-300 font-semibold uppercase tracking-wider">
+                        Pendulum Enhanced Ranking ({comp?.enhancedTop10?.length ?? d.results?.length ?? 0})
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-[11px]">
+                          <thead className="text-neutral-500 border-b border-obsidian-800">
+                            <tr>
+                              <th className="p-2">#</th>
+                              <th className="p-2">Delta</th>
+                              <th className="p-2">Title</th>
+                              <th className="p-2">Domain</th>
+                              <th className="p-2">Score</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-obsidian-800/70">
+                            {(comp?.enhancedTop10 || d.results || []).slice(0, 10).map((r: any, i: number) => {
+                              const deltaLabel =
+                                r.originalRank == null
+                                  ? 'NEW'
+                                  : r.rankDelta > 0
+                                  ? `+${r.rankDelta}`
+                                  : r.rankDelta < 0
+                                  ? `${r.rankDelta}`
+                                  : '=';
+                              const deltaColor =
+                                r.originalRank == null
+                                  ? 'text-cyan-300'
+                                  : r.rankDelta > 0
+                                  ? 'text-emerald-400'
+                                  : r.rankDelta < 0
+                                  ? 'text-amber-300'
+                                  : 'text-neutral-500';
+                              return (
+                                <tr key={i} className="hover:bg-obsidian-900/60">
+                                  <td className="p-2 text-neutral-400">{r.finalRank ?? r.rank ?? i + 1}</td>
+                                  <td className={`p-2 font-bold ${deltaColor}`}>{deltaLabel}</td>
+                                  <td className="p-2 text-white max-w-[200px] truncate">
+                                    {r.isOfficialWebsite ? '[Official] ' : r.isEnriched ? '[Enriched] ' : ''}
+                                    {r.title}
+                                  </td>
+                                  <td className="p-2 text-gold-300 max-w-[120px] truncate">{r.domain}</td>
+                                  <td className="p-2 text-emerald-400">{(r.finalScore ?? r.scores?.final ?? 0).toFixed(3)}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gained / Lost Summary */}
+                  {((comp?.gainedResults?.length > 0) || (comp?.lostResults?.length > 0)) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                      <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                        <div className="text-emerald-400 font-semibold mb-1.5">
+                          Gained in Enhanced Top-10 ({comp?.gainedResults?.length || 0})
+                        </div>
+                        <div className="space-y-1">
+                          {(comp?.gainedResults || []).slice(0, 6).map((g: any, idx: number) => (
+                            <div key={idx} className="text-neutral-300 truncate">
+                              #{g.finalRank} {g.domain} — {g.reason}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-obsidian-950 border border-obsidian-800">
+                        <div className="text-amber-300 font-semibold mb-1.5">
+                          Dropped / Outranked from Original ({comp?.lostResults?.length || 0})
+                        </div>
+                        <div className="space-y-1">
+                          {(comp?.lostResults || []).slice(0, 6).map((l: any, idx: number) => (
+                            <div key={idx} className="text-neutral-400 truncate">
+                              Orig #{l.originalRank} {l.domain} — {l.reason}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Phase 10 Acceptance Suite Output */}
+            {acceptanceReport?.phase10Queries && (
+              <div className="pt-3 border-t border-obsidian-800 space-y-2 text-xs font-mono tabular-nums">
+                <div className="flex items-center justify-between">
+                  <span className="text-gold-300 font-semibold">
+                    Acceptance Suite: {acceptanceReport.passedCount}/{acceptanceReport.totalCount} Passed
+                  </span>
+                  <span className="text-neutral-500 text-[11px]">{acceptanceReport.executedAt}</span>
+                </div>
+                <div className="overflow-x-auto rounded-xl border border-obsidian-800 bg-obsidian-950">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="text-neutral-500 border-b border-obsidian-800">
+                      <tr>
+                        <th className="p-2">Query</th>
+                        <th className="p-2">Preserved</th>
+                        <th className="p-2">Top-1 Domain</th>
+                        <th className="p-2">Wiki #</th>
+                        <th className="p-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-obsidian-800/70">
+                      {acceptanceReport.phase10Queries.map((qr: any, idx: number) => (
+                        <tr key={idx}>
+                          <td className="p-2 text-white">{qr.query}</td>
+                          <td className="p-2 text-emerald-400">{qr.queryPreserved ? 'Exact' : 'Changed'}</td>
+                          <td className="p-2 text-gold-300">{qr.top1Domain}</td>
+                          <td className="p-2 text-neutral-300">{qr.wikipediaInTop10}</td>
+                          <td className={`p-2 font-bold ${qr.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {qr.passed ? 'PASS' : 'FAIL'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

@@ -173,7 +173,7 @@ class SearchScorer:
         category_filter: Optional[str] = None,
         freshness_filter: Optional[str] = None,
         enable_diversity: bool = True,
-        max_per_domain: int = 3
+        max_per_domain: int = 2
     ) -> Dict[str, Any]:
         """
         Universal Multi-Factor Search & Retrieval Engine.
@@ -444,6 +444,15 @@ class SearchScorer:
             cred_score = float(r["credibility_score"] or 0.5)
             qual_score = float(r["quality_score"] or 0.5)
 
+            is_wikipedia = "wikipedia.org" in domain.lower()
+            q_lower = query.lower()
+            is_def_or_hist = any(
+                w in q_lower
+                for w in ("what is", "who is", "define ", "definition", "meaning", "history of", "overview")
+            )
+            if is_wikipedia and not is_def_or_hist:
+                cred_score = min(cred_score, 0.56)
+
             # Location and distance calculation
             loc_info = doc_location_lookup.get(doc_id)
             distance_km = None
@@ -466,22 +475,24 @@ class SearchScorer:
                 weights["quality"] * qual_score
             )
 
-            # 6c. Domain Diversity Reranking (Anti-Monopoly: Avoid excessive results from one domain)
+            # 6c. Domain Diversity Reranking (Anti-Monopoly: Cap Wikipedia & single-domain crowding)
             if enable_diversity:
-                d_count = domain_counts.get(domain, 0)
-                domain_counts[domain] = d_count + 1
-                if d_count >= max_per_domain:
-                    excess = d_count - max_per_domain + 1
-                    diversity_damp = 1.0 / (1.0 + excess * 0.5)
+                d_key = "wikipedia.org" if is_wikipedia else domain.lower()
+                domain_cap = 1 if (is_wikipedia and not is_def_or_hist) else max_per_domain
+                d_count = domain_counts.get(d_key, 0)
+                domain_counts[d_key] = d_count + 1
+                if d_count >= domain_cap:
+                    excess = d_count - domain_cap + 1
+                    diversity_damp = 1.0 / (1.0 + excess * 0.75)
                     composite_score *= diversity_damp
 
             # Highlight snippet
             clean_snippet = self.highlight_snippet(r["snippet"] or content, geo_intent.clean_query or query)
 
-            # Images and videos
-            images_raw = json.loads(r["images_json"] or "[]")
+            # Images and videos strictly isolated to image/video modes
+            images_raw = json.loads(r["images_json"] or "[]") if mode in ("image", "video") else []
             images = [ImageItem(**img) for img in images_raw[:6]]
-            videos_raw = json.loads(r["videos_json"] or "[]")
+            videos_raw = json.loads(r["videos_json"] or "[]") if mode == "video" else []
             videos = [VideoItem(**vid) for vid in videos_raw[:2]]
 
             # Human readable date strings

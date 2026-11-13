@@ -29,6 +29,9 @@ class ProviderResult:
     distance_km: Optional[float] = None
     distance_str: Optional[str] = None
     images: List[Dict[str, Any]] = field(default_factory=list)
+    original_rank: Optional[int] = None
+    provider_type: str = "external_supplement"  # "primary_web_search" | "external_supplement" | "hs_indexed"
+    result_type: str = "web"
 
 class BaseSearchProvider(ABC):
     """Abstract base class for all search providers in the HS Search Gateway."""

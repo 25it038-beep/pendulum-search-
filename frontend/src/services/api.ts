@@ -558,3 +558,571 @@ export async function testAdminGatewayInferenceAPI(tier: string, prompt: string)
   return res.json();
 }
 
+export async function fetchAdminQualityDashboardAPI(): Promise<any> {
+  const res = await fetch(`${API_BASE}/admin/quality-dashboard`);
+  if (!res.ok) throw new Error('Failed to load IR quality dashboard');
+  return res.json();
+}
+
+export async function fetchAdminDiagnosticsAPI(query?: string): Promise<any> {
+  const url = query && query.trim()
+    ? `${API_BASE}/admin/diagnostics?q=${encodeURIComponent(query.trim())}`
+    : `${API_BASE}/admin/diagnostics`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to load search diagnostics');
+  return res.json();
+}
+
+// =============================================================================
+// Unified Pendulum Search Client APIs (SSE AI Search, Hybrid, Media, Maps, Eval)
+// =============================================================================
+import type {
+  AiFollowupStyle,
+  AiModelSelection,
+  PendulumDirections,
+  PendulumFollowupResponse,
+  PendulumImageItem,
+  PendulumMapPlace,
+  PendulumSort,
+  PendulumUnifiedResponse,
+  PendulumUserSettings,
+  PendulumVideoItem,
+  TimeRangeFilter
+} from '../types';
+
+function buildLocationPayload(settings?: Partial<PendulumUserSettings>) {
+  if (!settings) return { enabled: true };
+  if (!settings.locationEnabled) return { enabled: false };
+  return {
+    city: settings.city || 'Chennai',
+    country: settings.country || 'India',
+    lat: settings.lat,
+    lon: settings.lon,
+    enabled: true
+  };
+}
+
+export async function streamAiSearchSSE(
+  params: {
+    query: string;
+    model?: AiModelSelection;
+    type?: string;
+    sort?: PendulumSort;
+    timeRange?: TimeRangeFilter;
+    limit?: number;
+    settings?: Partial<PendulumUserSettings>;
+  },
+  callbacks: {
+    onSources: (meta: Partial<PendulumUnifiedResponse>) => void;
+    onDelta: (delta: string) => void;
+    onDone: (finalPayload: Partial<PendulumUnifiedResponse>) => void;
+  },
+  signal?: AbortSignal
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/ai/search`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream'
+    },
+    body: JSON.stringify({
+      query: params.query,
+      model: params.model || params.settings?.aiModel || 'auto',
+      type: params.type || 'All',
+      sort: params.sort || 'relevance',
+      timeRange: params.timeRange || 'any',
+      limit: params.limit || params.settings?.limit || 20,
+      location: buildLocationPayload(params.settings),
+      stream: true
+    }),
+    signal
+  });
+
+  if (!res.ok) {
+    let errDetail = `Search failed (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      if (errJson?.detail || errJson?.error) errDetail = errJson.detail || errJson.error;
+    } catch {}
+    throw new Error(errDetail);
+  }
+  if (!res.body) {
+    throw new Error('Streaming response body unavailable');
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  const dispatchFrame = (rawFrame: string) => {
+    const lines = rawFrame.split(/\r?\n/);
+    let eventName = 'message';
+    const dataLines: string[] = [];
+
+    for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trim());
+      }
+    }
+    if (dataLines.length === 0) return;
+
+    const rawData = dataLines.join('\n');
+    try {
+      const parsed = JSON.parse(rawData);
+      if (eventName === 'sources') {
+        callbacks.onSources(parsed);
+      } else if (eventName === 'delta' && typeof parsed.delta === 'string') {
+        callbacks.onDelta(parsed.delta);
+      } else if (eventName === 'done') {
+        callbacks.onDone(parsed);
+      }
+    } catch {}
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split(/\r?\n\r?\n/);
+    buffer = frames.pop() || '';
+    for (const frame of frames) {
+      if (frame.trim()) dispatchFrame(frame);
+    }
+  }
+  if (buffer.trim()) {
+    dispatchFrame(buffer);
+  }
+}
+
+export async function postHybridSearchAPI(
+  params: {
+    query: string;
+    type?: string;
+    sort?: PendulumSort;
+    timeRange?: TimeRangeFilter;
+    limit?: number;
+    aiOverview?: boolean;
+    model?: AiModelSelection;
+    settings?: Partial<PendulumUserSettings>;
+  },
+  signal?: AbortSignal
+): Promise<PendulumUnifiedResponse> {
+  const res = await fetch(`${API_BASE}/search/hybrid`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: params.query,
+      location: buildLocationPayload(params.settings),
+      options: {
+        type: params.type || 'All',
+        sort: params.sort || 'relevance',
+        timeRange: params.timeRange || 'any',
+        limit: params.limit || params.settings?.limit || 20,
+        safeSearch: params.settings?.safeSearch !== false,
+        aiOverview: params.aiOverview ?? false,
+        model: params.model || params.settings?.aiModel || 'auto'
+      }
+    }),
+    signal
+  });
+  if (!res.ok) {
+    let errDetail = `Search failed (HTTP ${res.status})`;
+    try {
+      const e = await res.json();
+      if (e?.detail || e?.error) errDetail = e.detail || e.error;
+    } catch {}
+    throw new Error(errDetail);
+  }
+  return res.json();
+}
+
+export async function postAiFollowupAPI(
+  params: {
+    query: string;
+    followupQuery: string;
+    history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+    existingSources?: any[];
+    model?: AiModelSelection;
+    responseStyle?: AiFollowupStyle;
+    regenerate?: boolean;
+    settings?: Partial<PendulumUserSettings>;
+  },
+  signal?: AbortSignal
+): Promise<PendulumFollowupResponse> {
+  const res = await fetch(`${API_BASE}/ai/followup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: params.query,
+      followupQuery: params.followupQuery,
+      history: params.history || [],
+      existingSources: params.existingSources || [],
+      model: params.model || params.settings?.aiModel || 'auto',
+      responseStyle: params.responseStyle || 'auto',
+      regenerate: Boolean(params.regenerate),
+      location: buildLocationPayload(params.settings)
+    }),
+    signal
+  });
+  if (!res.ok) {
+    let errDetail = `Follow-up request failed (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      if (errJson?.detail || errJson?.error) errDetail = errJson.detail || errJson.error;
+    } catch {}
+    throw new Error(errDetail);
+  }
+  return res.json();
+}
+
+export async function streamAiFollowupSSE(
+  params: {
+    query: string;
+    followupQuery: string;
+    history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+    existingSources?: any[];
+    model?: AiModelSelection;
+    responseStyle?: AiFollowupStyle;
+    regenerate?: boolean;
+    settings?: Partial<PendulumUserSettings>;
+  },
+  callbacks: {
+    onSources: (meta: Partial<PendulumFollowupResponse>) => void;
+    onDelta: (delta: string) => void;
+    onDone: (finalPayload: PendulumFollowupResponse) => void;
+  },
+  signal?: AbortSignal
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/ai/followup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream'
+    },
+    body: JSON.stringify({
+      query: params.query,
+      followupQuery: params.followupQuery,
+      history: params.history || [],
+      existingSources: params.existingSources || [],
+      model: params.model || params.settings?.aiModel || 'auto',
+      responseStyle: params.responseStyle || 'auto',
+      regenerate: Boolean(params.regenerate),
+      location: buildLocationPayload(params.settings),
+      stream: true
+    }),
+    signal
+  });
+
+  if (!res.ok) {
+    let errDetail = `Follow-up stream failed (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      if (errJson?.detail || errJson?.error) errDetail = errJson.detail || errJson.error;
+    } catch {}
+    throw new Error(errDetail);
+  }
+  if (!res.body) {
+    throw new Error('Streaming response body unavailable');
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  const dispatchFrame = (rawFrame: string) => {
+    const lines = rawFrame.split(/\r?\n/);
+    let eventName = 'message';
+    const dataLines: string[] = [];
+
+    for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trim());
+      }
+    }
+    if (dataLines.length === 0) return;
+
+    const rawData = dataLines.join('\n');
+    let parsed: any;
+    try {
+      parsed = JSON.parse(rawData);
+    } catch {
+      return;
+    }
+
+    if (eventName === 'error') {
+      throw new Error(parsed?.detail || 'Follow-up stream error');
+    } else if (eventName === 'sources') {
+      callbacks.onSources(parsed);
+    } else if (eventName === 'delta' && typeof parsed.delta === 'string') {
+      callbacks.onDelta(parsed.delta);
+    } else if (eventName === 'done') {
+      callbacks.onDone(parsed);
+    }
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split(/\r?\n\r?\n/);
+    buffer = frames.pop() || '';
+    for (const frame of frames) {
+      if (frame.trim()) dispatchFrame(frame);
+    }
+  }
+  if (buffer.trim()) {
+    dispatchFrame(buffer);
+  }
+}
+
+export async function postAiOverviewAPI(
+  params: {
+    query: string;
+    type?: string;
+    model?: AiModelSelection;
+    regenerate?: boolean;
+    settings?: Partial<PendulumUserSettings>;
+  },
+  signal?: AbortSignal
+): Promise<any> {
+  const res = await fetch(`${API_BASE}/ai/overview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: params.query,
+      type: params.type || 'All',
+      model: params.model || params.settings?.aiModel || 'auto',
+      regenerate: Boolean(params.regenerate),
+      location: buildLocationPayload(params.settings)
+    }),
+    signal
+  });
+  if (!res.ok) throw new Error(`Overview generation failed (HTTP ${res.status})`);
+  return res.json();
+}
+
+export async function searchVideosAPI(
+  query: string,
+  limit: number = 16,
+  signal?: AbortSignal
+): Promise<{ query: string; total: number; partial?: boolean; errors?: string[]; results: PendulumVideoItem[] }> {
+  const res = await fetch(`${API_BASE}/videos/search?q=${encodeURIComponent(query)}&limit=${limit}`, { signal });
+  if (!res.ok) throw new Error(`Video search failed (HTTP ${res.status})`);
+  return res.json();
+}
+
+export async function searchImagesAPI(
+  query: string,
+  opts?: { limit?: number; license?: string; orientation?: string; source?: string },
+  signal?: AbortSignal
+): Promise<{
+  query: string;
+  total: number;
+  partial?: boolean;
+  errors?: string[];
+  attribution?: { primaryProvider?: string; enhancedBy?: string };
+  results: PendulumImageItem[];
+}> {
+  const params = new URLSearchParams({
+    q: query,
+    limit: String(opts?.limit || 24),
+    license: opts?.license || 'all',
+    orientation: opts?.orientation || 'all',
+    source: opts?.source || 'all'
+  });
+  const res = await fetch(`${API_BASE}/images/search?${params.toString()}`, { signal });
+  if (!res.ok) throw new Error(`Image search failed (HTTP ${res.status})`);
+  return res.json();
+}
+
+export async function getMapConfigAPI(): Promise<any> {
+  const res = await fetch(`${API_BASE}/maps/config`);
+  if (!res.ok) throw new Error('Failed to load map tile config');
+  return res.json();
+}
+
+export async function searchMapsAPI(
+  query: string,
+  limit: number = 12,
+  signal?: AbortSignal
+): Promise<{ query: string; total: number; error?: string; results: PendulumMapPlace[] }> {
+  const res = await fetch(`${API_BASE}/maps/search?q=${encodeURIComponent(query)}&limit=${limit}`, { signal });
+  if (!res.ok) throw new Error(`Map search failed (HTTP ${res.status})`);
+  return res.json();
+}
+
+export async function searchNearbyMapsAPI(
+  lat: number,
+  lon: number,
+  type: string = 'restaurant',
+  radius: number = 4000,
+  signal?: AbortSignal
+): Promise<{ center: { lat: number; lon: number }; type: string; total: number; error?: string; results: PendulumMapPlace[] }> {
+  const res = await fetch(
+    `${API_BASE}/maps/nearby?lat=${lat}&lon=${lon}&type=${encodeURIComponent(type)}&radius=${radius}`,
+    { signal }
+  );
+  if (!res.ok) throw new Error(`Nearby search failed (HTTP ${res.status})`);
+  return res.json();
+}
+
+export async function getDirectionsAPI(
+  params: { fromLat: number; fromLon: number; toLat: number; toLon: number; mode?: 'driving' | 'foot' | 'bike' },
+  signal?: AbortSignal
+): Promise<PendulumDirections> {
+  const q = new URLSearchParams({
+    fromLat: String(params.fromLat),
+    fromLon: String(params.fromLon),
+    toLat: String(params.toLat),
+    toLon: String(params.toLon),
+    mode: params.mode || 'driving'
+  });
+  const res = await fetch(`${API_BASE}/maps/directions?${q.toString()}`, { signal });
+  if (!res.ok) throw new Error(`Directions request failed (HTTP ${res.status})`);
+  return res.json();
+}
+
+export async function detectGeoAPI(): Promise<{
+  country_name?: string;
+  country_code?: string;
+  state?: string;
+  city?: string;
+  locality?: string;
+  lat?: number;
+  lon?: number;
+}> {
+  const res = await fetch(`${API_BASE}/geo/detect`);
+  if (!res.ok) throw new Error('Geo detection failed');
+  return res.json();
+}
+
+export async function fetchEvalMetricsAPI(): Promise<any> {
+  const res = await fetch(`${API_BASE}/eval/metrics`);
+  if (!res.ok) throw new Error('Failed to load evaluation metrics');
+  return res.json();
+}
+
+export async function runAcceptanceAPI(): Promise<any> {
+  const res = await fetch(`${API_BASE}/eval/acceptance`);
+  if (!res.ok) throw new Error('Failed to run acceptance suite');
+  return res.json();
+}
+
+export async function trackClickAPI(category: string): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/metrics/click`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category })
+    });
+  } catch {}
+}
+
+export async function sendFeedbackAPI(helpful: boolean): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/metrics/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ helpful })
+    });
+  } catch {}
+}
+
+export async function fetchUserWorkspaceAPI(token: string): Promise<{
+  user: { id: number; uid: string; email: string; displayName?: string | null; photoUrl?: string | null };
+  preferences: {
+    aiOverview: boolean;
+    aiModel: string;
+    resultLimit: number;
+    safeSearch: boolean;
+    locationEnabled: boolean;
+    city: string;
+    country: string;
+  } | null;
+  history: Array<{ id: number; query: string; category: string; createdAt: string }>;
+  saved: Array<{ id: number; url: string; title: string; snippet: string; domain: string; category: string; createdAt: string }>;
+}> {
+  const res = await fetch(`${API_BASE}/user/workspace`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Unable to load your workspace');
+  return res.json();
+}
+
+export async function saveUserPreferencesAPI(
+  token: string,
+  prefs: {
+    aiOverview: boolean;
+    aiModel: string;
+    limit: number;
+    safeSearch: boolean;
+    locationEnabled: boolean;
+    city: string;
+    country: string;
+  }
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/user/preferences`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(prefs)
+  });
+  if (!res.ok) throw new Error('Unable to save preferences');
+}
+
+export async function recordUserHistoryAPI(token: string, query: string, category: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/user/history`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ query, category })
+  });
+  if (!res.ok) throw new Error('Unable to save search history');
+}
+
+export async function clearUserHistoryAPI(token: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/user/history`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Unable to clear search history');
+}
+
+export async function saveSearchResultAPI(
+  token: string,
+  item: { url: string; title: string; snippet?: string; domain?: string; category?: string }
+): Promise<{ saved: { id: number; url: string; title: string; snippet: string; domain: string; category: string; createdAt: string } }> {
+  const res = await fetch(`${API_BASE}/user/saved`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(item)
+  });
+  if (!res.ok) throw new Error('Unable to bookmark result');
+  return res.json();
+}
+
+export async function removeSavedResultAPI(token: string, url: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/user/saved`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ url })
+  });
+  if (!res.ok) throw new Error('Unable to remove bookmark');
+}
+
+
+

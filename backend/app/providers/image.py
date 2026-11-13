@@ -15,6 +15,8 @@ Key Guarantees:
 """
 
 import asyncio
+import html as html_lib
+import json
 import logging
 import re
 import time
@@ -27,15 +29,21 @@ logger = logging.getLogger(__name__)
 
 _COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 _OPENVERSE_API = "https://api.openverse.org/v1/images/"
+_DDG_URL = "https://duckduckgo.com/"
+_DDG_IMAGES_API = "https://duckduckgo.com/i.js"
 _USER_AGENT = "PendulumSearch/1.0 (https://hsaisolutions.com; contact@hsaisolutions.com)"
+_BROWSER_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
 _CACHE_TTL_SEC = 900.0  # 15 minutes
 
 
 class ImageSearchProvider:
     """
     Modular Image Search Provider.
-    Queries Wikimedia Commons and Openverse concurrently, normalizes metadata,
-    and formats for the Pendulum Immersive Image Viewer.
+    Queries DuckDuckGo Images as primary foundation, with Wikimedia Commons and Openverse
+    for open-license filters or fallbacks.
     """
 
     def __init__(self):
@@ -47,13 +55,16 @@ class ImageSearchProvider:
         query: str,
         limit: int = 30,
         license_filter: Optional[str] = None,
-        aspect_ratio: Optional[str] = None
+        aspect_ratio: Optional[str] = None,
+        source_filter: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         clean_q = (query or "").strip()
         if not clean_q:
             return []
 
-        cache_key = f"{clean_q.lower()}:{limit}:{license_filter}:{aspect_ratio}"
+        lic_norm = (license_filter or "all").lower()
+        src_norm = (source_filter or "all").lower()
+        cache_key = f"{clean_q.lower()}:{limit}:{lic_norm}:{aspect_ratio}:{src_norm}"
         now = time.time()
         async with self._lock:
             if cache_key in self._cache:
@@ -62,37 +73,65 @@ class ImageSearchProvider:
                     return data
                 del self._cache[cache_key]
 
-        # Query Wikimedia Commons & Openverse concurrently
-        commons_task = asyncio.create_task(self._search_wikimedia(clean_q, limit=limit // 2 + 5))
-        openverse_task = asyncio.create_task(self._search_openverse(clean_q, limit=limit // 2 + 5, license_filter=license_filter))
+        is_unrestricted = lic_norm in ("all", "any", "")
+        want_ddg = src_norm == "duckduckgo" or (src_norm == "all" and is_unrestricted)
+
+        ddg_items: List[Dict[str, Any]] = []
+        if want_ddg:
+            ddg_items = await self._search_duckduckgo(clean_q, limit=limit)
+            if aspect_ratio:
+                ddg_items = [img for img in ddg_items if self._matches_aspect(img, aspect_ratio)]
+
+        if src_norm == "all" and is_unrestricted and len(ddg_items) < min(limit, 6):
+            bing_items = await self._search_bing_web_fallback(clean_q, aspect_ratio=aspect_ratio, limit=limit)
+            ddg_items.extend(bing_items)
 
         results: List[Dict[str, Any]] = []
-        raw = await asyncio.gather(commons_task, openverse_task, return_exceptions=True)
-
-        commons_items = raw[0] if isinstance(raw[0], list) else []
-        openverse_items = raw[1] if isinstance(raw[1], list) else []
-
-        # Interleave results
-        max_len = max(len(commons_items), len(openverse_items))
         seen_urls = set()
 
-        for i in range(max_len):
-            if i < len(commons_items):
-                it = commons_items[i]
-                if it["url"] not in seen_urls:
-                    seen_urls.add(it["url"])
-                    results.append(it)
-            if i < len(openverse_items):
-                it = openverse_items[i]
-                if it["url"] not in seen_urls:
-                    seen_urls.add(it["url"])
-                    results.append(it)
+        for it in ddg_items:
+            if it["url"] not in seen_urls:
+                seen_urls.add(it["url"])
+                results.append(it)
             if len(results) >= limit:
                 break
 
-        # Apply aspect ratio filter if requested
-        if aspect_ratio:
-            results = [img for img in results if self._matches_aspect(img, aspect_ratio)]
+        need_open_catalogs = (
+            src_norm in ("wikimedia", "openverse")
+            or not is_unrestricted
+            or (src_norm == "all" and len(results) < min(limit, 6))
+        )
+
+        if need_open_catalogs:
+            tasks = []
+            if src_norm != "openverse":
+                tasks.append(asyncio.create_task(self._search_wikimedia(clean_q, limit=limit // 2 + 5)))
+            if src_norm != "wikimedia":
+                tasks.append(
+                    asyncio.create_task(
+                        self._search_openverse(
+                            clean_q,
+                            limit=limit // 2 + 5,
+                            license_filter=None if is_unrestricted else lic_norm
+                        )
+                    )
+                )
+
+            raw = await asyncio.gather(*tasks, return_exceptions=True) if tasks else []
+            open_items: List[Dict[str, Any]] = []
+            for bucket in raw:
+                if isinstance(bucket, list):
+                    open_items.extend(bucket)
+
+            if aspect_ratio:
+                open_items = [img for img in open_items if self._matches_aspect(img, aspect_ratio)]
+
+            for it in open_items:
+                if it["url"] not in seen_urls:
+                    seen_urls.add(it["url"])
+                    results.append(it)
+                if len(results) >= limit:
+                    break
 
         # Save to cache
         async with self._lock:
@@ -102,18 +141,168 @@ class ImageSearchProvider:
 
         return results[:limit]
 
+    async def _search_duckduckgo(self, query: str, limit: int = 30) -> List[Dict[str, Any]]:
+        """Fetch primary image results from DuckDuckGo i.js using fresh VQD token."""
+        items: List[Dict[str, Any]] = []
+        try:
+            headers = {
+                "User-Agent": _BROWSER_UA,
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+            async with httpx.AsyncClient(headers=headers, timeout=5.0, follow_redirects=True) as client:
+                vqd_resp = await client.get(
+                    _DDG_URL,
+                    params={"q": query, "iax": "images", "ia": "images"}
+                )
+                if vqd_resp.status_code != 200:
+                    return items
+                m = re.search(r'vqd=["\']?([0-9-]+)["\']?', vqd_resp.text) or re.search(r'vqd=([^"&\'\s]+)', vqd_resp.text)
+                if not m:
+                    return items
+                vqd = m.group(1)
+
+                img_resp = await client.get(
+                    _DDG_IMAGES_API,
+                    params={
+                        "l": "us-en",
+                        "o": "json",
+                        "q": query,
+                        "vqd": vqd,
+                        "f": ",,,,,",
+                        "p": "1",
+                    },
+                    headers={
+                        "Referer": "https://duckduckgo.com/",
+                        "Accept": "application/json, text/javascript, */*; q=0.01",
+                    }
+                )
+                if img_resp.status_code != 200:
+                    return items
+
+                payload = img_resp.json()
+                if payload.get("challenge") or not isinstance(payload.get("results"), list):
+                    return items
+                raw_results = payload.get("results", [])
+                for idx, it in enumerate(raw_results[: max(limit * 2, 40)]):
+                    orig_url = (it.get("image") or "").strip()
+                    if not orig_url.startswith(("http://", "https://")):
+                        continue
+                    thumb_url = (it.get("thumbnail") or "").strip()
+                    if not thumb_url.startswith(("http://", "https://")):
+                        thumb_url = orig_url
+                    source_url = (it.get("url") or orig_url).strip()
+                    title = (it.get("title") or query).strip()
+                    w = int(it.get("width") or 0)
+                    h = int(it.get("height") or 0)
+                    domain_match = re.match(r"https?://(?:www\.)?([^/]+)", source_url)
+                    domain = domain_match.group(1) if domain_match else "duckduckgo.com"
+
+                    items.append({
+                        "id": f"ddg_img_{idx}",
+                        "title": title,
+                        "url": orig_url,
+                        "thumbnail_url": thumb_url,
+                        "width": w,
+                        "height": h,
+                        "aspect_ratio": round(w / h, 2) if h else 1.0,
+                        "creator": domain,
+                        "creator_url": source_url,
+                        "license": "Web Image (See Source)",
+                        "license_url": source_url,
+                        "allow_download": False,
+                        "source": "DuckDuckGo",
+                        "provider": "DuckDuckGo",
+                        "domain": domain,
+                        "source_url": source_url,
+                        "description": f"Image via DuckDuckGo from {domain}.",
+                        "attribution": f"Based on DuckDuckGo · Source: {domain}"
+                    })
+        except Exception as exc:
+            logger.debug("DuckDuckGo image search error: %s", exc)
+
+        return items
+
+    async def _search_bing_web_fallback(
+        self,
+        query: str,
+        aspect_ratio: Optional[str] = None,
+        limit: int = 30
+    ) -> List[Dict[str, Any]]:
+        """Fallback to Bing web image index (DuckDuckGo's upstream web image index) when DDG rate-limits."""
+        items: List[Dict[str, Any]] = []
+        try:
+            params: Dict[str, str] = {"q": query, "first": "1", "count": str(max(limit, 35)), "adlt": "moderate"}
+            if aspect_ratio in ("wide", "landscape"):
+                params["qft"] = "+filterui:aspect-wide"
+            elif aspect_ratio in ("tall", "portrait"):
+                params["qft"] = "+filterui:aspect-tall"
+            elif aspect_ratio == "square":
+                params["qft"] = "+filterui:aspect-square"
+
+            headers = {"User-Agent": _BROWSER_UA, "Accept-Language": "en-US,en;q=0.9"}
+            async with httpx.AsyncClient(headers=headers, timeout=5.0, follow_redirects=True) as client:
+                resp = await client.get("https://www.bing.com/images/async", params=params)
+                if resp.status_code != 200:
+                    return items
+                card_re = re.compile(r'<a\b[^>]*class="[^"]*\biusc\b[^"]*"[^>]*m="([^"]+)"([^>]*)>', re.I)
+                for idx, match in enumerate(card_re.finditer(resp.text)):
+                    if len(items) >= limit:
+                        break
+                    try:
+                        obj = json.loads(html_lib.unescape(match.group(1)))
+                    except Exception:
+                        continue
+                    orig_url = (obj.get("murl") or "").strip()
+                    if not orig_url.startswith(("http://", "https://")):
+                        continue
+                    thumb_url = (obj.get("turl") or "").strip()
+                    if not thumb_url.startswith(("http://", "https://")):
+                        thumb_url = orig_url
+                    source_url = (obj.get("purl") or orig_url).strip()
+                    tail = match.group(2) or ""
+                    w_m = re.search(r"expw=(\d+)", tail, re.I)
+                    h_m = re.search(r"exph=(\d+)", tail, re.I)
+                    w = int(w_m.group(1)) if w_m else 0
+                    h = int(h_m.group(1)) if h_m else 0
+                    title = (obj.get("t") or obj.get("desc") or query).strip()
+                    dom_m = re.match(r"https?://(?:www\.)?([^/]+)", source_url)
+                    domain = dom_m.group(1) if dom_m else "bing.com"
+                    items.append({
+                        "id": f"bing_img_{idx}",
+                        "title": title,
+                        "url": orig_url,
+                        "thumbnail_url": thumb_url,
+                        "width": w,
+                        "height": h,
+                        "aspect_ratio": round(w / h, 2) if h else 1.0,
+                        "creator": domain,
+                        "creator_url": source_url,
+                        "license": "Web Image (See Source)",
+                        "license_url": source_url,
+                        "allow_download": False,
+                        "source": "Bing Web Index",
+                        "provider": "Bing Web Index",
+                        "domain": domain,
+                        "source_url": source_url,
+                        "description": f"Web image index result from {domain}.",
+                        "attribution": f"Based on Web Image Index · Source: {domain}"
+                    })
+        except Exception as exc:
+            logger.debug("Bing web image fallback error: %s", exc)
+        return items
+
     def _matches_aspect(self, img: Dict[str, Any], aspect: str) -> bool:
         w = img.get("width") or 0
         h = img.get("height") or 0
         if not w or not h:
-            return True
+            return False if aspect in ("tall", "portrait", "wide", "landscape", "square") else True
         ratio = w / h
         if aspect == "tall" or aspect == "portrait":
-            return ratio < 0.85
+            return ratio < 0.9
         elif aspect == "wide" or aspect == "landscape":
-            return ratio > 1.25
+            return ratio > 1.1
         elif aspect == "square":
-            return 0.85 <= ratio <= 1.25
+            return 0.85 <= ratio <= 1.15
         return True
 
     async def _search_wikimedia(self, query: str, limit: int = 15) -> List[Dict[str, Any]]:

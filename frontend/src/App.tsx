@@ -1,533 +1,462 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Header 
-} from './components/Header';
-import { SearchBar } from './components/SearchBar';
-import { ModeSelector } from './components/ModeSelector';
-import { JulyAnswerCard } from './components/JulyAnswerCard';
-import { GravityResearchView } from './components/GravityResearchView';
-import { ResultCard } from './components/ResultCard';
-import { ImageGrid } from './components/ImageGrid';
-import { LiveFeedTicker } from './components/LiveFeedTicker';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import type {
+  PendulumCategory,
+  PendulumImageItem,
+  PendulumResultItem,
+  PendulumSearchHistoryEntry,
+  PendulumSort,
+  PendulumUserSettings,
+  PendulumVideoItem,
+  SavedSearchResultItem,
+  TimeRangeFilter
+} from './types';
+import {
+  clearUserHistoryAPI,
+  detectGeoAPI,
+  fetchUserWorkspaceAPI,
+  recordUserHistoryAPI,
+  removeSavedResultAPI,
+  saveSearchResultAPI,
+  saveUserPreferencesAPI
+} from './services/api';
+import { useAuth } from './context/AuthContext';
+import { HomePage } from './components/pendulum/HomePage';
+import { SearchResultsPage } from './components/pendulum/SearchResultsPage';
+import {
+  EvaluationModal,
+  ImageViewerModal,
+  ProfileModal,
+  SettingsModal,
+  VideoPlayerModal
+} from './components/pendulum/Modals';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MegaCrawlerDashboard } from './components/MegaCrawlerDashboard';
-import { LocationSelectorModal } from './components/LocationSelectorModal';
-import { GlobalMapView } from './components/GlobalMapView';
-import { LiveLocalWidget } from './components/LiveLocalWidget';
-import { ProviderStatsBar } from './components/ProviderStatsBar';
-import { searchAPI, fetchMetricsAPI } from './services/api';
-import { SearchResponse, SearchMode, SortOrder, LocationState, HybridSearchResponse } from './types';
-import { 
-  Sparkles, ShieldCheck, Zap, Globe, Cpu, Database, 
-  Terminal, ArrowRight, Layers, Radio, MapPin, Navigation
-} from 'lucide-react';
 
-export const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'search' | 'admin' | 'megacrawler'>('search');
-  const [query, setQuery] = useState('');
-  const [activeQuery, setActiveQuery] = useState('');
-  const [mode, setMode] = useState<SearchMode>('general');
-  const [sort, setSort] = useState<SortOrder>('relevance');
-  const [aiMode, setAiMode] = useState('auto');
-  const [page, setPage] = useState(1);
+const SETTINGS_STORAGE_KEY = 'pendulum_settings_v2';
+const HISTORY_STORAGE_KEY = 'pendulum_history_v2';
 
-  // Global Geolocation Intelligence State
-  const [locationState, setLocationState] = useState<LocationState>(() => {
-    try {
-      const saved = localStorage.getItem('hs_geo_location_state');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return {
-      mode: 'worldwide',
-      displayName: 'Worldwide',
-      radiusKm: 25,
-      rankingMode: 'most_relevant',
-      privacyMode: 'standard'
-    };
-  });
-  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [viewLayout, setViewLayout] = useState<'list' | 'split' | 'map'>('list');
-  const [selectedResultId, setSelectedResultId] = useState<number | null>(null);
+const DEFAULT_SETTINGS: PendulumUserSettings = {
+  aiOverview: true,
+  aiModel: 'auto',
+  limit: 20,
+  safeSearch: true,
+  locationEnabled: true,
+  city: 'Chennai',
+  country: 'India',
+  lat: 12.9249,
+  lon: 80.1
+};
 
-  const [loading, setLoading] = useState(false);
-  const [searchResponse, setSearchResponse] = useState<HybridSearchResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [totalIndexed, setTotalIndexed] = useState<number>(0);
-  const [isCrawlerActive, setIsCrawlerActive] = useState<boolean>(true);
+const VALID_CATEGORIES: PendulumCategory[] = [
+  'All',
+  'Images',
+  'Videos',
+  'News',
+  'Maps',
+  'Shopping',
+  'Books',
+  'Research'
+];
 
-  // Save locationState to localStorage
-  const handleLocationChange = (newState: LocationState) => {
-    setLocationState(newState);
-    try {
-      localStorage.setItem('hs_geo_location_state', JSON.stringify(newState));
-    } catch {}
-    // Re-run search if query is active
-    if (activeQuery) {
-      executeSearch(activeQuery, mode, sort, newState);
+const VALID_SORTS: PendulumSort[] = ['relevance', 'latest', 'local'];
+const VALID_TIME_RANGES: TimeRangeFilter[] = ['any', 'hour', 'day', 'week', 'month', 'year'];
+
+interface ParsedRoute {
+  pathname: string;
+  query: string;
+  category: PendulumCategory;
+  sort: PendulumSort;
+  timeRange: TimeRangeFilter;
+}
+
+function parseLocation(): ParsedRoute {
+  if (typeof window === 'undefined') {
+    return { pathname: '/', query: '', category: 'All', sort: 'relevance', timeRange: 'any' };
+  }
+  const pathname = window.location.pathname || '/';
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q') || '';
+  const rawCat = params.get('type') || 'All';
+  const category = VALID_CATEGORIES.find((c) => c.toLowerCase() === rawCat.toLowerCase()) || 'All';
+  const rawSort = params.get('sort') || 'relevance';
+  const sort = VALID_SORTS.includes(rawSort as PendulumSort) ? (rawSort as PendulumSort) : 'relevance';
+  const rawTime = params.get('time') || 'any';
+  const timeRange = VALID_TIME_RANGES.includes(rawTime as TimeRangeFilter)
+    ? (rawTime as TimeRangeFilter)
+    : 'any';
+
+  return { pathname, query: q, category, sort, timeRange };
+}
+
+function loadSettings(): PendulumUserSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  } catch {}
+  return DEFAULT_SETTINGS;
+}
+
+function loadHistory(): PendulumSearchHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
     }
-  };
+  } catch {}
+  return [];
+}
 
-  // Initial metrics fetch
+export function App() {
+  const { user, getAuthToken } = useAuth();
+  const [route, setRoute] = useState<ParsedRoute>(() => parseLocation());
+  const [settings, setSettings] = useState<PendulumUserSettings>(() => loadSettings());
+  const [history, setHistory] = useState<PendulumSearchHistoryEntry[]>(() => loadHistory());
+  const [savedResults, setSavedResults] = useState<SavedSearchResultItem[]>([]);
+
+  // Shared Modal State
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [evalOpen, setEvalOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<{ item: PendulumVideoItem; list: PendulumVideoItem[] } | null>(null);
+  const [activeImage, setActiveImage] = useState<{ item: PendulumImageItem; list: PendulumImageItem[] } | null>(null);
+
+  // Sync user workspace from PostgreSQL when signed in
   useEffect(() => {
-    fetchMetricsAPI().then(res => {
-      setTotalIndexed(res.metrics.indexed_webpages);
-      setIsCrawlerActive(res.crawler_running);
-    }).catch(() => {});
+    if (!user) {
+      setSavedResults([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getAuthToken();
+        if (!token || cancelled) return;
+        const workspace = await fetchUserWorkspaceAPI(token);
+        if (cancelled) return;
+        if (workspace.preferences) {
+          setSettings((prev) => ({
+            ...prev,
+            aiOverview: workspace.preferences!.aiOverview,
+            aiModel: (['auto', 'july', 'gravity'].includes(workspace.preferences!.aiModel)
+              ? workspace.preferences!.aiModel
+              : 'auto') as PendulumUserSettings['aiModel'],
+            limit: workspace.preferences!.resultLimit,
+            safeSearch: workspace.preferences!.safeSearch,
+            locationEnabled: workspace.preferences!.locationEnabled,
+            city: workspace.preferences!.city,
+            country: workspace.preferences!.country
+          }));
+        }
+        if (Array.isArray(workspace.history) && workspace.history.length > 0) {
+          setHistory(
+            workspace.history.map((h) => ({
+              query: h.query,
+              category: (VALID_CATEGORIES.find((c) => c.toLowerCase() === h.category.toLowerCase()) || 'All') as PendulumCategory,
+              timestamp: h.createdAt
+            }))
+          );
+        }
+        if (Array.isArray(workspace.saved)) {
+          setSavedResults(workspace.saved);
+        }
+      } catch (err) {
+        console.error('Workspace sync skipped:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, getAuthToken]);
+
+  // Initial IP/Geo detection when user hasn't customized settings
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(SETTINGS_STORAGE_KEY)) return;
+    } catch {}
+    detectGeoAPI()
+      .then((geo) => {
+        setSettings((prev) => {
+          const next = {
+            ...prev,
+            city: geo.city || prev.city,
+            country: geo.country_name || prev.country,
+            lat: geo.lat ?? prev.lat,
+            lon: geo.lon ?? prev.lon
+          };
+          try {
+            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+      })
+      .catch(() => {});
   }, []);
 
-  const executeSearch = async (
-    q: string, 
-    newMode?: SearchMode, 
-    newSort?: SortOrder, 
-    locState?: LocationState
-  ) => {
-    const targetQ = q.trim();
-    if (!targetQ) return;
+  // Browser Back / Forward support via popstate
+  useEffect(() => {
+    const handlePop = () => {
+      setRoute(parseLocation());
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
 
-    const targetMode = newMode || mode;
-    const targetSort = newSort || sort;
-    const activeLoc = locState || locationState;
+  // Dynamic Document Title
+  useEffect(() => {
+    if (route.pathname.startsWith('/search') && route.query.trim()) {
+      document.title = `${route.query.trim()} — Pendulum Search`;
+    } else if (route.pathname.startsWith('/dashboard') || route.pathname.startsWith('/admin')) {
+      document.title = 'Control Center — Pendulum Search';
+    } else if (route.pathname.startsWith('/megacrawler')) {
+      document.title = 'HS MegaCrawler — Pendulum Search';
+    } else {
+      document.title = 'Pendulum Search — Explore the world';
+    }
+  }, [route]);
 
-    setActiveQuery(targetQ);
-    setLoading(true);
-    setError(null);
-
+  const updateSettings = (next: PendulumUserSettings) => {
+    setSettings(next);
     try {
-      const geoParams = {
-        lat: activeLoc.coords?.lat,
-        lon: activeLoc.coords?.lon,
-        radiusKm: activeLoc.radiusKm,
-        location: activeLoc.mode !== 'worldwide' ? activeLoc.displayName : undefined,
-        locationMode: activeLoc.mode,
-        rankingMode: targetSort === 'closest' 
-          ? 'closest_first' 
-          : (targetSort === 'best_rated' ? 'best_rated' : activeLoc.rankingMode)
-      };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next));
+    } catch {}
+    if (user) {
+      getAuthToken()
+        .then((token) => {
+          if (token) return saveUserPreferencesAPI(token, next);
+        })
+        .catch(() => {});
+    }
+  };
 
-      const res = await searchAPI(
-        targetQ, 
-        targetMode, 
-        targetSort, 
-        1, 
-        15, 
-        aiMode, 
-        undefined, 
-        geoParams
-      );
+  const recordHistory = useCallback((q: string, category: PendulumCategory) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    setHistory((prev) => {
+      const filtered = prev.filter((item) => item.query.toLowerCase() !== trimmed.toLowerCase());
+      const next = [{ query: trimmed, category, timestamp: new Date().toISOString() }, ...filtered].slice(0, 25);
+      try {
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    if (user) {
+      getAuthToken()
+        .then((token) => {
+          if (token) return recordUserHistoryAPI(token, trimmed, category);
+        })
+        .catch(() => {});
+    }
+  }, [user, getAuthToken]);
 
-      setSearchResponse(res);
-      setPage(1);
+  const savedUrls = React.useMemo(() => new Set(savedResults.map((s) => s.url)), [savedResults]);
 
-      // If results contain spatial locations or query is geo-aware, suggest split view if not already selected
-      const hasSpatialResults = res.results.some(r => r.location && (r.location.lat || r.location.coordinates));
-      if ((res.geo_metadata?.is_geo_query || hasSpatialResults) && viewLayout === 'list') {
-        setViewLayout('split');
+  const handleToggleSaveResult = useCallback(
+    async (item: PendulumResultItem) => {
+      if (!user) {
+        setProfileOpen(true);
+        return;
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during search.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      const token = await getAuthToken();
+      if (!token) {
+        setProfileOpen(true);
+        return;
+      }
+      if (savedUrls.has(item.url)) {
+        setSavedResults((prev) => prev.filter((s) => s.url !== item.url));
+        try {
+          await removeSavedResultAPI(token, item.url);
+        } catch {}
+      } else {
+        const optimistic: SavedSearchResultItem = {
+          url: item.url,
+          title: item.title,
+          snippet: item.snippet,
+          domain: item.domain,
+          category: item.category || 'All',
+          createdAt: new Date().toISOString()
+        };
+        setSavedResults((prev) => [optimistic, ...prev.filter((s) => s.url !== item.url)]);
+        try {
+          const res = await saveSearchResultAPI(token, optimistic);
+          if (res.saved) {
+            setSavedResults((prev) => [res.saved, ...prev.filter((s) => s.url !== item.url)]);
+          }
+        } catch {}
+      }
+    },
+    [user, getAuthToken, savedUrls]
+  );
 
-  const handleSearch = (q: string) => {
-    executeSearch(q, mode, sort);
-  };
+  const handleRemoveSaved = useCallback(
+    async (url: string) => {
+      setSavedResults((prev) => prev.filter((s) => s.url !== url));
+      if (user) {
+        const token = await getAuthToken();
+        if (token) {
+          removeSavedResultAPI(token, url).catch(() => {});
+        }
+      }
+    },
+    [user, getAuthToken]
+  );
 
-  const handleModeChange = (newMode: SearchMode) => {
-    setMode(newMode);
-    if (activeQuery) {
-      executeSearch(activeQuery, newMode, sort);
-    }
-  };
+  const navigateToSearch = useCallback(
+    (
+      nextQuery: string,
+      opts?: { category?: PendulumCategory; sort?: PendulumSort; timeRange?: TimeRangeFilter }
+    ) => {
+      const trimmed = nextQuery.trim();
+      if (!trimmed) return;
 
-  const handleSortChange = (newSort: SortOrder) => {
-    setSort(newSort);
-    if (activeQuery) {
-      executeSearch(activeQuery, mode, newSort);
-    }
-  };
+      const cat = opts?.category || 'All';
+      const sort = opts?.sort || 'relevance';
+      const timeRange = opts?.timeRange || 'any';
 
-  const handleViewOnMap = (id: number) => {
-    setSelectedResultId(id);
-    if (viewLayout === 'list') {
-      setViewLayout('split');
-    }
-  };
+      const params = new URLSearchParams();
+      params.set('q', trimmed);
+      if (cat !== 'All') params.set('type', cat);
+      if (sort !== 'relevance') params.set('sort', sort);
+      if (timeRange !== 'any') params.set('time', timeRange);
 
-  const sampleQueries = [
-    "Colleges in Tambaram",
-    "Restaurants near me",
-    "Best hospitals in Chennai",
-    "Universities near Coimbatore",
-    "Tourist places in Japan",
-    "Artificial intelligence breakthroughs",
-    "Autonomous web crawler architecture"
-  ];
+      const url = `/search?${params.toString()}`;
+      window.history.pushState({}, '', url);
+      setRoute({ pathname: '/search', query: trimmed, category: cat, sort, timeRange });
+      recordHistory(trimmed, cat);
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    },
+    [recordHistory]
+  );
 
-  // Resolve map center coords from geo_metadata, locationState coords, or first result
-  const mapCenterCoords = searchResponse?.geo_metadata?.target_lat && searchResponse?.geo_metadata?.target_lon
-    ? { lat: searchResponse.geo_metadata.target_lat, lon: searchResponse.geo_metadata.target_lon }
-    : (locationState.coords || (
-        searchResponse?.results.find(r => r.location?.lat)?.location
-          ? { lat: searchResponse!.results.find(r => r.location?.lat)!.location!.lat, lon: searchResponse!.results.find(r => r.location?.lon)!.location!.lon }
-          : undefined
-      ));
+  const navigateHome = useCallback(() => {
+    window.history.pushState({}, '', '/');
+    setRoute({ pathname: '/', query: '', category: 'All', sort: 'relevance', timeRange: 'any' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
 
-  const hasGeoResults = Boolean(searchResponse?.results.some(r => r.location && (r.location.lat || r.location.coordinates)));
+  const navigateRoute = useCallback((path: string) => {
+    window.history.pushState({}, '', path);
+    setRoute({ pathname: path, query: '', category: 'All', sort: 'relevance', timeRange: 'any' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  const recentQueryStrings = history.map((h) => h.query);
+
+  // Admin / Control Center & MegaCrawler sub-routes preserved inside same SPA
+  if (route.pathname.startsWith('/dashboard') || route.pathname.startsWith('/admin')) {
+    return (
+      <div className="min-h-screen bg-obsidian-950 text-[#f3f0e9]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={navigateHome}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#111316] border border-white/10 hover:border-gold-400/45 text-xs font-medium text-gold-200 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Pendulum Search</span>
+          </button>
+        </div>
+        <AdminDashboard />
+      </div>
+    );
+  }
+
+  if (route.pathname.startsWith('/megacrawler')) {
+    return (
+      <div className="min-h-screen bg-obsidian-950 text-[#f3f0e9]">
+        <MegaCrawlerDashboard onClose={navigateHome} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-neutral-200 flex flex-col font-sans selection:bg-gold-400 selection:text-obsidian-950">
-      {/* Navigation Header */}
-      <Header
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        isCrawlerActive={isCrawlerActive}
-        totalIndexed={totalIndexed}
-        locationState={locationState}
-        onOpenLocationModal={() => setIsLocationModalOpen(true)}
+    <>
+      {route.pathname.startsWith('/search') ? (
+        <SearchResultsPage
+          query={route.query}
+          category={route.category}
+          sort={route.sort}
+          timeRange={route.timeRange}
+          settings={settings}
+          recentQueries={recentQueryStrings}
+          savedUrls={savedUrls}
+          onToggleSaveResult={handleToggleSaveResult}
+          onNavigateHome={navigateHome}
+          onNavigateSearch={navigateToSearch}
+          onNavigateRoute={navigateRoute}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenEval={() => setEvalOpen(true)}
+          onOpenProfile={() => setProfileOpen(true)}
+          onPlayVideo={(item, list) => setActiveVideo({ item, list })}
+          onOpenImage={(item, list) => setActiveImage({ item, list })}
+        />
+      ) : (
+        <HomePage
+          settings={settings}
+          recentQueries={recentQueryStrings}
+          onSearch={(q, cat) => navigateToSearch(q, { category: cat || 'All' })}
+          onUpdateSettings={updateSettings}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenEval={() => setEvalOpen(true)}
+          onOpenProfile={() => setProfileOpen(true)}
+          onNavigateRoute={navigateRoute}
+        />
+      )}
+
+      {/* Shared Modals */}
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
+        onSave={updateSettings}
       />
 
-      {/* Location Selector Modal */}
-      <LocationSelectorModal
-        isOpen={isLocationModalOpen}
-        onClose={() => setIsLocationModalOpen(false)}
-        locationState={locationState}
-        onLocationChange={handleLocationChange}
+      <EvaluationModal
+        open={evalOpen}
+        onClose={() => setEvalOpen(false)}
+        onNavigateRoute={navigateRoute}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1">
-        {currentView === 'megacrawler' ? (
-          <MegaCrawlerDashboard onClose={() => setCurrentView('search')} />
-        ) : currentView === 'admin' ? (
-          <AdminDashboard />
-        ) : (
-          <div>
-            {/* Live Ticker */}
-            <LiveFeedTicker />
+      <ProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        history={history}
+        savedResults={savedResults}
+        onSelectQuery={(q) => navigateToSearch(q, { category: 'All' })}
+        onClearHistory={() => {
+          setHistory([]);
+          try {
+            localStorage.removeItem(HISTORY_STORAGE_KEY);
+          } catch {}
+          if (user) {
+            getAuthToken()
+              .then((token) => {
+                if (token) return clearUserHistoryAPI(token);
+              })
+              .catch(() => {});
+          }
+        }}
+        onRemoveSaved={handleRemoveSaved}
+        settings={settings}
+      />
 
-            {/* Landing Hero View (when no active query) */}
-            {!activeQuery && (
-              <div className="max-w-4xl mx-auto px-4 pt-16 pb-24 text-center">
-                {/* Brand Emblem */}
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-gold-300 via-gold-500 to-gold-700 shadow-gold-glow-lg mb-6 transform hover:scale-105 transition-transform duration-500">
-                  <span className="font-serif font-black text-obsidian-950 text-4xl tracking-tighter">HS</span>
-                </div>
+      <VideoPlayerModal
+        video={activeVideo?.item || null}
+        relatedVideos={activeVideo?.list || []}
+        onClose={() => setActiveVideo(null)}
+        onSelectVideo={(v) => setActiveVideo((prev) => (prev ? { ...prev, item: v } : null))}
+      />
 
-                <h1 className="text-4xl sm:text-6xl font-serif font-bold tracking-tight mb-4">
-                  <span className="bg-gradient-to-r from-neutral-100 via-gold-200 to-gold-400 bg-clip-text text-transparent">
-                    HS SEARCH
-                  </span>
-                </h1>
-
-                <p className="text-base sm:text-lg text-neutral-400 font-light max-w-2xl mx-auto mb-4 leading-relaxed">
-                  Universal Web Search + Global GeoSearch. Powered by July AI.
-                </p>
-
-                {/* Location Quick Switcher Banner */}
-                <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-obsidian-900 border border-gold-400/30 text-xs font-mono text-neutral-300 mb-8 shadow-sm">
-                  <MapPin className="w-3.5 h-3.5 text-gold-400" />
-                  <span>Searching in:</span>
-                  <button
-                    onClick={() => setIsLocationModalOpen(true)}
-                    className="text-gold-300 font-semibold hover:underline flex items-center gap-1"
-                  >
-                    <span>{locationState.displayName}</span>
-                    <span className="text-neutral-500">({locationState.radiusKm} km) ▾</span>
-                  </button>
-                </div>
-
-                {/* Central Search Bar */}
-                <div className="mb-8">
-                  <SearchBar
-                    query={query}
-                    onQueryChange={setQuery}
-                    onSearch={(q) => handleSearch(q)}
-                  />
-                </div>
-
-                {/* Sample Seed Queries */}
-                <div className="flex flex-wrap items-center justify-center gap-2 mb-16 text-xs">
-                  <span className="text-neutral-500 font-mono">Suggested:</span>
-                  {sampleQueries.map((sq, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setQuery(sq);
-                        handleSearch(sq);
-                      }}
-                      className="px-3 py-1.5 rounded-full bg-obsidian-900 border border-obsidian-800 text-neutral-300 hover:text-gold-300 hover:border-gold-400/40 transition-colors"
-                    >
-                      {sq}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Feature Highlights Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left pt-8 border-t border-obsidian-850">
-                  <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-850">
-                    <div className="flex items-center space-x-2 text-gold-400 mb-2 font-mono text-xs font-semibold">
-                      <Globe className="w-4 h-4" />
-                      <span>GLOBAL GEOSEARCH</span>
-                    </div>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      Spatial indexing with R*Tree and Geohash grids. Radius search, nearest-location retrieval, and administrative boundaries across all countries.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-850">
-                    <div className="flex items-center space-x-2 text-gold-400 mb-2 font-mono text-xs font-semibold">
-                      <Radio className="w-4 h-4 text-rose-400" />
-                      <span>LIVE LOCAL PULSE</span>
-                    </div>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      Real-time weather, public transit status, and municipal announcements with verifiable last-checked timestamps.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-obsidian-900/60 border border-obsidian-850">
-                    <div className="flex items-center space-x-2 text-gold-400 mb-2 font-mono text-xs font-semibold">
-                      <Sparkles className="w-4 h-4" />
-                      <span>JULY AI INTEGRATION</span>
-                    </div>
-                    <p className="text-xs text-neutral-400 leading-relaxed">
-                      Spatial query parsing, exact distance calculations, operating status synthesis, and strictly grounded citations.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Search Results View */}
-            {activeQuery && (
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                {/* Compact Search Bar Header */}
-                <div className="mb-6 max-w-4xl">
-                  <SearchBar
-                    query={query}
-                    onQueryChange={setQuery}
-                    onSearch={(q) => handleSearch(q)}
-                    compact
-                  />
-                </div>
-
-                {/* Mode & Sort & Layout Selector */}
-                <ModeSelector
-                  currentMode={mode}
-                  onModeChange={handleModeChange}
-                  currentSort={sort}
-                  onSortChange={handleSortChange}
-                  aiMode={aiMode}
-                  onAiModeChange={setAiMode}
-                  viewLayout={viewLayout}
-                  onViewLayoutChange={setViewLayout}
-                  hasGeoResults={hasGeoResults}
-                />
-
-                {/* Hybrid Provider Telemetry Bar */}
-                {searchResponse && (
-                  <ProviderStatsBar
-                    sourcesUsed={searchResponse.sources_used}
-                    providerStats={searchResponse.provider_stats}
-                    queryIntent={searchResponse.query_intent}
-                    queryComplexity={searchResponse.query_complexity}
-                    executionTimeMs={searchResponse.execution_time_ms}
-                  />
-                )}
-
-                {/* Loading State */}
-                {loading && (
-                  <div className="py-20 text-center">
-                    <div className="inline-block w-8 h-8 border-2 border-gold-400 border-t-transparent rounded-full animate-spin mb-3" />
-                    <p className="text-sm font-mono text-gold-300">Searching independent global spatial index & synthesizing intelligence...</p>
-                  </div>
-                )}
-
-                {/* Error State */}
-                {error && (
-                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm mb-6">
-                    {error}
-                  </div>
-                )}
-
-                {/* Search Results Content */}
-                {!loading && searchResponse && (
-                  <div>
-                    {/* Live Local Pulse (if city metadata exists) */}
-                    {searchResponse.geo_metadata?.live_local_info && (
-                      <LiveLocalWidget info={searchResponse.geo_metadata.live_local_info as any} />
-                    )}
-
-                    {/* Telemetry Stats Bar */}
-                    <div className="flex flex-wrap items-center justify-between text-xs font-mono text-neutral-500 mb-6 pb-2 border-b border-obsidian-850 gap-2">
-                      <div className="flex items-center space-x-3">
-                        <span>
-                          Found <strong className="text-neutral-300">{searchResponse.total_results}</strong> results
-                        </span>
-                        <span>•</span>
-                        <span>
-                          Retrieved in <strong className="text-gold-400">{searchResponse.execution_time_ms}ms</strong>
-                        </span>
-                      </div>
-
-                      {/* Geographic Scope Badge */}
-                      {searchResponse.geo_metadata?.is_geo_query && (
-                        <div className="flex items-center space-x-1.5 px-2 py-0.5 rounded bg-gold-400/10 border border-gold-400/20 text-gold-300">
-                          <MapPin className="w-3 h-3 text-gold-400" />
-                          <span>Spatial Target: {searchResponse.geo_metadata.target_place || locationState.displayName}</span>
-                          {searchResponse.geo_metadata.radius_km && (
-                            <span className="text-neutral-400">({searchResponse.geo_metadata.radius_km} km radius)</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* AI Intelligence Panel */}
-                    {searchResponse.ai_intelligence && (
-                      <div>
-                        {searchResponse.ai_intelligence.model?.includes('GRAVITY') ? (
-                          <GravityResearchView data={searchResponse.ai_intelligence} />
-                        ) : (
-                          <JulyAnswerCard 
-                            data={searchResponse.ai_intelligence} 
-                            geoMetadata={searchResponse.geo_metadata as any} 
-                          />
-                        )}
-                      </div>
-                    )}
-
-                    {/* Mode: Image Grid */}
-                    {mode === 'image' ? (
-                      <ImageGrid results={searchResponse.results} />
-                    ) : (
-                      /* Layout Management: List vs Split vs Map */
-                      <div>
-                        {/* 1. Full Map View */}
-                        {viewLayout === 'map' && (
-                          <div className="space-y-6">
-                            <GlobalMapView
-                              results={searchResponse.results}
-                              centerCoords={mapCenterCoords}
-                              radiusKm={searchResponse.geo_metadata?.radius_km || locationState.radiusKm}
-                              locationName={searchResponse.geo_metadata?.target_place || locationState.displayName}
-                              selectedResultId={selectedResultId}
-                              onSelectResult={(id) => setSelectedResultId(id)}
-                              className="h-[600px] w-full rounded-2xl shadow-gold-glow"
-                            />
-
-                            {/* Floating / Compact Results Cards underneath */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {searchResponse.results.map((item) => (
-                                <ResultCard
-                                  key={item.id}
-                                  item={item}
-                                  isSelected={selectedResultId === item.id}
-                                  onViewOnMap={handleViewOnMap}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 2. Split View (List on Left, Sticky Map on Right) */}
-                        {viewLayout === 'split' && (
-                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                            {/* Left Column: Results List */}
-                            <div className="lg:col-span-7 space-y-4">
-                              {searchResponse.results.length === 0 ? (
-                                <div className="py-16 text-center text-neutral-400 rounded-2xl bg-obsidian-900 border border-obsidian-850 p-8">
-                                  <h3 className="text-base font-semibold text-white mb-2">No documents matched your geographic query</h3>
-                                  <p className="text-xs text-neutral-400 max-w-md mx-auto mb-4">
-                                    Try expanding your search radius or changing your location filters.
-                                  </p>
-                                </div>
-                              ) : (
-                                searchResponse.results.map((item) => (
-                                  <ResultCard
-                                    key={item.id}
-                                    item={item}
-                                    isSelected={selectedResultId === item.id}
-                                    onViewOnMap={handleViewOnMap}
-                                  />
-                                ))
-                              )}
-                            </div>
-
-                            {/* Right Column: Sticky Interactive Map */}
-                            <div className="lg:col-span-5 lg:sticky lg:top-24">
-                              <GlobalMapView
-                                results={searchResponse.results}
-                                centerCoords={mapCenterCoords}
-                                radiusKm={searchResponse.geo_metadata?.radius_km || locationState.radiusKm}
-                                locationName={searchResponse.geo_metadata?.target_place || locationState.displayName}
-                                selectedResultId={selectedResultId}
-                                onSelectResult={(id) => setSelectedResultId(id)}
-                                className="h-[550px] w-full rounded-2xl shadow-gold-glow"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 3. List View */}
-                        {viewLayout === 'list' && (
-                          <div className="max-w-4xl space-y-4">
-                            {searchResponse.results.length === 0 ? (
-                              <div className="py-16 text-center text-neutral-400 rounded-2xl bg-obsidian-900 border border-obsidian-850 p-8">
-                                <h3 className="text-base font-semibold text-white mb-2">No documents matched your query</h3>
-                                <p className="text-xs text-neutral-400 max-w-md mx-auto mb-4">
-                                  HS Search indexes documents independently. You can enqueue additional seed domains or trigger an on-demand crawl in the Admin Dashboard.
-                                </p>
-                                <button
-                                  onClick={() => setCurrentView('admin')}
-                                  className="px-4 py-2 rounded-xl bg-gold-400 text-obsidian-950 font-semibold text-xs hover:brightness-110"
-                                >
-                                  Open Admin Dashboard
-                                </button>
-                              </div>
-                            ) : (
-                              searchResponse.results.map((item) => (
-                                <ResultCard
-                                  key={item.id}
-                                  item={item}
-                                  isSelected={selectedResultId === item.id}
-                                  onViewOnMap={handleViewOnMap}
-                                />
-                              ))
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-obsidian-850 bg-obsidian-950 py-8 mt-auto text-xs text-neutral-500 font-mono">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="font-serif font-bold text-gold-400">HS SEARCH</span>
-            <span>• Universal Web Search + Global GeoSearch</span>
-            <span>• Powered by July AI</span>
-            <span>• By HS AI Solutions</span>
-            <span>• Founder: Harshan Seliyan</span>
-          </div>
-          <div className="flex items-center space-x-4 text-[11px]">
-            <span>Spatial R*Tree</span>
-            <span>•</span>
-            <span>Geohash Grid</span>
-            <span>•</span>
-            <span>Zero External Search APIs</span>
-            <span>•</span>
-            <span>Privacy-First Geolocation</span>
-          </div>
-        </div>
-      </footer>
-    </div>
+      <ImageViewerModal
+        image={activeImage?.item || null}
+        allImages={activeImage?.list || []}
+        onClose={() => setActiveImage(null)}
+        onSelectImage={(img) => setActiveImage((prev) => (prev ? { ...prev, item: img } : null))}
+      />
+    </>
   );
-};
+}
+
+export default App;

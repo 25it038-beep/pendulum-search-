@@ -1,0 +1,847 @@
+[
+  {
+    "entityKey": "rmk engineering college",
+    "name": "RMK Engineering College",
+    "entityType": "educational_institution",
+    "aliases": [
+      "RMK Engineering College",
+      "REC",
+      "RMK",
+      "R.M.K",
+      "R.M.K.",
+      "RMK College",
+      "RC"
+    ],
+    "officialUrl": "https://www.rmkec.ac.in/2023/",
+    "officialDomain": "rmkec.ac.in",
+    "confidence": 0.99,
+    "verifiedBy": [
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity",
+      "verified_institutional_tld",
+      "official_domain_contact_match"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.rmkec.ac.in/2023/about-us-3/vision-mission/",
+        "canonicalUrl": "https://www.rmkec.ac.in/2023/about-us-3/vision-mission/",
+        "title": "RMK ENGINEERING COLLEGE",
+        "snippet": "RMK ENGINEERING COLLEGE R.M.K. ENGINEERING COLLEGE (an autonomous institution) MENU MENU Home About Us Chairman Vice Chairman Management Team Vision &#038; Mission Educational Organization Policy Administration Governing Council Academic Council Strategic Plan",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:09.423Z"
+      },
+      {
+        "url": "https://www.rmkec.ac.in/2023/about-us-3/management-team/",
+        "canonicalUrl": "https://www.rmkec.ac.in/2023/about-us-3/management-team/",
+        "title": "RMK ENGINEERING COLLEGE",
+        "snippet": "RMK ENGINEERING COLLEGE R.M.K. ENGINEERING COLLEGE (an autonomous institution) MENU MENU Home About Us Chairman Vice Chairman Management Team Vision &#038; Mission Educational Organization Policy Administration Governing Council Academic Council Strategic Plan",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T10:43:37.739Z"
+      },
+      {
+        "url": "https://www.rmkec.ac.in/2023/about-us-3/about-us-2/",
+        "canonicalUrl": "https://www.rmkec.ac.in/2023/about-us-3/about-us-2/",
+        "title": "RMK ENGINEERING COLLEGE",
+        "snippet": "RMK ENGINEERING COLLEGE R.M.K. ENGINEERING COLLEGE (an autonomous institution) MENU MENU Home About Us Chairman Vice Chairman Management Team Vision &#038; Mission Educational Organization Policy Administration Governing Council Academic Council Strategic Plan",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T10:43:37.767Z"
+      },
+      {
+        "url": "https://www.rmkec.ac.in/2023/about-us-3/about-us/",
+        "canonicalUrl": "https://www.rmkec.ac.in/2023/about-us-3/about-us/",
+        "title": "RMK ENGINEERING COLLEGE",
+        "snippet": "RMK ENGINEERING COLLEGE R.M.K. ENGINEERING COLLEGE (an autonomous institution) MENU MENU Home About Us Chairman Vice Chairman Management Team Vision &#038; Mission Educational Organization Policy Administration Governing Council Academic Council Strategic Plan",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T10:43:37.765Z"
+      },
+      {
+        "url": "https://www.rmkec.ac.in/2023/administration/admission-procedure/",
+        "canonicalUrl": "https://www.rmkec.ac.in/2023/administration/admission-procedure/",
+        "title": "RMK ENGINEERING COLLEGE",
+        "snippet": "RMK ENGINEERING COLLEGE R.M.K. ENGINEERING COLLEGE (an autonomous institution) MENU MENU Home About Us Chairman Vice Chairman Management Team Vision &#038; Mission Educational Organization Policy Administration Governing Council Academic Council Strategic Plan",
+        "subpageType": "admissions",
+        "crawledAt": "2026-11-13T10:43:37.699Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T10:43:37.767Z",
+    "lastVerifiedAt": "2026-11-13T10:43:37.767Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "rmk college of engineering technology",
+    "name": "R.M.K. College of Engineering & Technology",
+    "entityType": "educational_institution",
+    "aliases": [
+      "RMK College of Engineering and Technology",
+      "RCET",
+      "RMK",
+      "R.M.K",
+      "R.M.K.",
+      "R.M.K. College of Engineering & Technology"
+    ],
+    "officialUrl": "https://www.rmkcet.ac.in/",
+    "officialDomain": "rmkcet.ac.in",
+    "confidence": 0.94,
+    "verifiedBy": [
+      "wikidata_p856"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(wikidata_p856)",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity",
+      "verified_institutional_tld",
+      "official_domain_contact_match"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.rmkcet.ac.in/college.php",
+        "canonicalUrl": "http://www.rmkcet.ac.in/college.php",
+        "title": "About RMK College | RMK College of Engineering and Technology",
+        "snippet": "The RMK College of Engineering affects unity acronymic RMKCET is an institution of unique qualities. The school finished boys and girls vye with one another to join this college as we convert the rock diamonds into polished and flashing with many facets of shining glory.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:14.744Z"
+      },
+      {
+        "url": "https://www.rmkcet.ac.in/gr-about.php",
+        "canonicalUrl": "http://www.rmkcet.ac.in/cse-department.php",
+        "title": "Grievance Redressal Cell | Welcome to RMK College of Engineering and Technology",
+        "snippet": "The RMK College of Engineering affects unity acronymic RMKCET is an institution of unique qualities. The school finished boys and girls vye with one another to join this college as we convert the rock diamonds into polished and flashing with many facets of shining glory.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:15.385Z"
+      },
+      {
+        "url": "https://www.rmkcet.ac.in/deanacademics.php",
+        "canonicalUrl": "http://www.rmkcet.ac.in/principal.php",
+        "title": "Dean Academics | RMK College of Engineering and Technology",
+        "snippet": "The RMK College of Engineering affects unity acronymic RMKCET is an institution of unique qualities. The school finished boys and girls vye with one another to join this college as we convert the rock diamonds into polished and flashing with many facets of shining glory.",
+        "subpageType": "departments",
+        "crawledAt": "2026-11-13T07:34:15.529Z"
+      },
+      {
+        "url": "https://www.rmkcet.ac.in/adm_admissionprocedure.php",
+        "canonicalUrl": "http://www.rmkcet.ac.in/adm_governingboard.php",
+        "title": "Admission Procedures | RMK College of Engineering and Technology",
+        "snippet": "The RMK College of Engineering affects unity acronymic RMKCET is an institution of unique qualities. The school finished boys and girls vye with one another to join this college as we convert the rock diamonds into polished and flashing with many facets of shining glory.",
+        "subpageType": "admissions",
+        "crawledAt": "2026-11-13T07:34:15.531Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:34:15.531Z",
+    "lastVerifiedAt": "2026-11-13T07:34:15.531Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "anna university",
+    "name": "Anna University",
+    "entityType": "educational_institution",
+    "aliases": [
+      "Anna University",
+      "AU"
+    ],
+    "country": "India",
+    "region": "Tamil Nadu",
+    "location": "Chennai",
+    "officialUrl": "https://www.annauniv.edu/",
+    "officialDomain": "annauniv.edu",
+    "confidence": 0.99,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity",
+      "verified_institutional_tld"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.annauniv.edu/nirf.php",
+        "canonicalUrl": "https://www.annauniv.edu/nirf.php",
+        "title": "Anna University, Chennai",
+        "snippet": "Anna University, Chennai --> --> Home தமிழில் அறிய --> View in English Sports IQAC NIRF Affiliation Library Placement --> e-Governance RCC POSH Contact Us --> About Us About us: Overview Act and Statutes Institutional Development Plan Anna University Managed I",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:19.083Z"
+      },
+      {
+        "url": "https://www.annauniv.edu/POSH/",
+        "canonicalUrl": "https://www.annauniv.edu/POSH/",
+        "title": "POSH - Anna University",
+        "snippet": "POSH - Anna University Prevention of Sexual Harassment Cell - Anna University &nbsp; &nbsp; Home Preamble People Facilities Director' s Desk Program Program 2026 2025 2017-2024 Gallery Contact Us Prevention of Sexual harassment cell Provision of Online Complai",
+        "subpageType": "news",
+        "crawledAt": "2026-11-13T07:34:19.124Z"
+      },
+      {
+        "url": "https://www.annauniv.edu/contactus.php",
+        "canonicalUrl": "https://www.annauniv.edu/contactus.php",
+        "title": "Anna University, Chennai",
+        "snippet": "Anna University, Chennai --> --> Home தமிழில் அறிய --> View in English Sports IQAC NIRF Affiliation Library Placement --> e-Governance RCC POSH Contact Us --> About Us About us: Overview Act and Statutes Institutional Development Plan Anna University Managed I",
+        "subpageType": "contact",
+        "crawledAt": "2026-11-13T07:34:19.143Z"
+      },
+      {
+        "url": "https://www.annauniv.edu/hod.php",
+        "canonicalUrl": "https://www.annauniv.edu/hod.php",
+        "title": "Anna University, Chennai",
+        "snippet": "Anna University, Chennai --> --> --> Home தமிழில் அறிய --> View in English Sports IQAC NIRF Affiliation Library Placement --> e-Governance RCC POSH Contact Us --> About Us About us: Overview Act and Statutes Institutional Development Plan Anna University Manag",
+        "subpageType": "departments",
+        "crawledAt": "2026-11-13T07:34:19.145Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:34:19.145Z",
+    "lastVerifiedAt": "2026-11-13T07:34:19.145Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "indian institute of technology madras",
+    "name": "Indian Institute of Technology - Madras",
+    "entityType": "educational_institution",
+    "aliases": [
+      "IIT Madras",
+      "IM",
+      "IIT",
+      "I.I.T",
+      "I.I.T.",
+      "Indian Institute of Technology",
+      "Indian Institute of Technology - Madras"
+    ],
+    "country": "India",
+    "region": "Tamil Nadu",
+    "location": "Chennai",
+    "officialUrl": "https://www.iitm.ac.in/",
+    "officialDomain": "iitm.ac.in",
+    "confidence": 0.99,
+    "verifiedBy": [
+      "osm_website",
+      "ror_registry",
+      "wikidata_p856"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(osm_website,ror_registry,wikidata_p856)",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity",
+      "verified_institutional_tld"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.iitm.ac.in/faculty-staff",
+        "canonicalUrl": "https://www.iitm.ac.in/faculty-staff",
+        "title": "Indian Institute of Technology Madras - Faculty & Staff",
+        "snippet": "Checkout the Faculty Staff Page to know about the Faculty Directory, Staff Directory, prospective staff, Current faculty & Staff",
+        "subpageType": "faculty",
+        "crawledAt": "2026-11-13T07:46:22.477Z"
+      },
+      {
+        "url": "https://www.iitm.ac.in/academics/overview",
+        "canonicalUrl": "https://www.iitm.ac.in/academics/overview",
+        "title": "Academics Overview | Indian Institute of Technology Madras",
+        "snippet": "Learn more about the departments & centres of the Institute are responsible for the academic activities which include Teaching, Research and Industrial Consultancy.",
+        "subpageType": "departments",
+        "crawledAt": "2026-11-13T07:46:22.563Z"
+      },
+      {
+        "url": "https://www.iitm.ac.in/contact",
+        "canonicalUrl": "https://www.iitm.ac.in/contact",
+        "title": "Contact | Indian Institute of Technology Madras",
+        "snippet": "Contact",
+        "subpageType": "contact",
+        "crawledAt": "2026-11-13T07:46:22.575Z"
+      },
+      {
+        "url": "https://www.iitm.ac.in/academics/study-at-iitm/non-campus-bs-programmes",
+        "canonicalUrl": "https://www.iitm.ac.in/academics/study-at-iitm/non-campus-bs-programmes",
+        "title": "Non-campus BS programmes | Indian Institute of Technology Madras",
+        "snippet": "Non-campus BS programmes",
+        "subpageType": "departments",
+        "crawledAt": "2026-11-13T07:46:22.559Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:46:22.575Z",
+    "lastVerifiedAt": "2026-11-13T07:46:22.575Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "google",
+    "name": "Google",
+    "entityType": "company",
+    "aliases": [
+      "Google"
+    ],
+    "officialUrl": "https://www.google.com/",
+    "officialDomain": "google.com",
+    "confidence": 0.94,
+    "verifiedBy": [
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.google.com/partners/about/sitemap.xml",
+        "canonicalUrl": "https://www.google.com/partners/about/sitemap.xml",
+        "title": "Google — about",
+        "snippet": "https://www.google.com/partners/about/ https://www.google.com/partners/about/join/ https://www.google.com/intl/ar/partners/about/ https://www.google.com/intl/ar/partners/about/join/ https://www.google.com/intl/bg/partners/about/ https://www.google.com/intl/bg/",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:25.233Z"
+      },
+      {
+        "url": "https://www.google.com/docs/sitemaps.xml",
+        "canonicalUrl": "https://www.google.com/docs/sitemaps.xml",
+        "title": "Google — docs",
+        "snippet": "https://www.google.com/docs/about/ Weekly 0.8 https://www.google.com/intl/af/docs/about/ Weekly 0.8 https://www.google.com/intl/id/docs/about/ Weekly 0.8 https://www.google.com/intl/ms/docs/about/ Weekly 0.8 https://www.google.com/intl/ca/docs/about/ Weekly 0.",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:34:25.237Z"
+      },
+      {
+        "url": "https://www.google.com/calendar/about/sitemap.xml",
+        "canonicalUrl": "https://www.google.com/calendar/about/sitemap.xml",
+        "title": "Google — about",
+        "snippet": "Official about resource on google.com.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:25.239Z"
+      },
+      {
+        "url": "https://about.google/",
+        "canonicalUrl": "https://about.google/",
+        "title": "About Google: Our products, technology and company information - About Google",
+        "snippet": "Learn more about Google. Explore our innovative AI products and services, and how we",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:25.280Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:34:25.280Z",
+    "lastVerifiedAt": "2026-11-13T07:34:25.280Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "microsoft india",
+    "name": "Microsoft (India)",
+    "entityType": "company",
+    "aliases": [
+      "Microsoft",
+      "Microsoft (India)"
+    ],
+    "country": "India",
+    "region": "Telangana",
+    "location": "Hyderabad",
+    "officialUrl": "https://www.microsoft.com/en-sg",
+    "officialDomain": "microsoft.com",
+    "confidence": 0.9,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856)",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.microsoft.com/store/surface-consumer-replacement-units-pdp-new-01.xml",
+        "canonicalUrl": "https://www.microsoft.com/store/surface-consumer-replacement-units-pdp-new-01.xml",
+        "title": "Microsoft (India) — placements",
+        "snippet": "https://www.microsoft.com/de-ch/d/product/8m9h3qf1nxdg https://www.microsoft.com/de-de/d/product/8m9h3qf1nxdg https://www.microsoft.com/en-au/d/product/8m9h3qf1nxdg https://www.microsoft.com/en-ca/d/product/8m9h3qf1nxdg https://www.microsoft.com/en-gb/d/produc",
+        "subpageType": "placements",
+        "crawledAt": "2026-11-13T07:34:28.055Z"
+      },
+      {
+        "url": "https://www.microsoft.com/store/xbox-replacement-units-pdp-new-01.xml",
+        "canonicalUrl": "https://www.microsoft.com/store/xbox-replacement-units-pdp-new-01.xml",
+        "title": "Microsoft (India) — placements",
+        "snippet": "https://www.microsoft.com/cs-cz/d/nahradni-soucast-xbox-series-s-thermal-paste-model-1883-512gb-1tb-14mistne-seriove-cislo/8mzbmmcjzp8p https://www.microsoft.com/de-de/d/ersatz-warmeleitpaste-fur-xbox-series-s-modell-1883-512gb-1tb-14-stellige-seriennummer/8mz",
+        "subpageType": "placements",
+        "crawledAt": "2026-11-13T07:34:28.074Z"
+      },
+      {
+        "url": "https://www.microsoft.com/en-sg/education/devices/overview",
+        "canonicalUrl": "https://www.microsoft.com/en-sg/education/devices/overview",
+        "title": "Computers and Laptops for Schools | Microsoft Education",
+        "snippet": "Example PDP 3 template page",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:28.137Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:34:28.137Z",
+    "lastVerifiedAt": "2026-11-13T07:34:28.137Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "nvidia italy",
+    "name": "NVIDIA (Italy)",
+    "entityType": "company",
+    "aliases": [
+      "NVIDIA",
+      "N.V.I.D.I.A",
+      "N.V.I.D.I.A.",
+      "NVIDIA (Italy)"
+    ],
+    "country": "Italy",
+    "region": "Lombardy",
+    "location": "Milan",
+    "officialUrl": "https://www.nvidia.com/en-sg/",
+    "officialDomain": "nvidia.com",
+    "confidence": 0.99,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.nvidia.com/en-sg/data-center/products/",
+        "canonicalUrl": "https://www.nvidia.com/en-sg/data-center/products/",
+        "title": "Accelerating the Next Wave of AI Innovation | NVIDIA Data Center Products",
+        "snippet": "NVIDIA data center products across GPUs, CPUs, DPUs, networking, and AI software accelerate the next wave of AI innovation for every workload.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:30.604Z"
+      },
+      {
+        "url": "https://www.nvidia.com/en-sg/solutions/ai/",
+        "canonicalUrl": "https://www.nvidia.com/en-sg/solutions/ai/",
+        "title": "AI Solutions for Enterprises | NVIDIA",
+        "snippet": "Transform any enterprise into an AI organization with full stack innovation across accelerated infrastructure, enterprise-grade software, and AI models.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:30.648Z"
+      },
+      {
+        "url": "https://www.nvidia.com/en-sg/networking/",
+        "canonicalUrl": "https://www.nvidia.com/en-sg/networking/",
+        "title": "Networking Solutions for the Era of AI | NVIDIA",
+        "snippet": "Accelerate AI workloads with NVIDIA networking solutions —delivering ultra-low latency and high efficiency for RAG, model training, and inference in modern data centers.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:30.738Z"
+      },
+      {
+        "url": "https://www.nvidia.com/en-sg/products/workstations/",
+        "canonicalUrl": "https://www.nvidia.com/en-sg/products/workstations/",
+        "title": "Workstations for Professionals | NVIDIA RTX PRO",
+        "snippet": "The NVIDIA RTX PRO platform is the heart of the world’s most powerful and efficient professional computing platforms.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:34:31.302Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:34:31.302Z",
+    "lastVerifiedAt": "2026-11-13T07:34:31.302Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "openai united states",
+    "name": "OpenAI (United States)",
+    "entityType": "company",
+    "aliases": [
+      "OpenAI",
+      "OpenAI (United States)"
+    ],
+    "country": "United States",
+    "region": "California",
+    "location": "San Francisco",
+    "officialUrl": "https://openai.com/",
+    "officialDomain": "openai.com",
+    "confidence": 0.66,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856)",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://openai.com/sitemap.xml/brand-stories-api/",
+        "canonicalUrl": "https://openai.com/sitemap.xml/brand-stories-api/",
+        "title": "OpenAI (United States) — docs",
+        "snippet": "https://openai.com/index/gpt-5-amgen/ 2026-11-09T22:47:55.479Z https://openai.com/index/gpt-5-coding-design/ 2026-11-03T21:29:30.209Z https://openai.com/index/gpt-5-cursor/ 2026-11-03T21:27:18.711Z https://openai.com/index/the-met-museum/ 2026-10-30T10:01:41.5",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:34:33.645Z"
+      },
+      {
+        "url": "https://openai.com/sitemap.xml/learn-guides/",
+        "canonicalUrl": "https://openai.com/sitemap.xml/learn-guides/",
+        "title": "OpenAI (United States) — docs",
+        "snippet": "https://openai.com/index/managing-ai-investments-in-agentic-era/ 2026-11-12T23:55:07.638Z https://openai.com/index/forward-deployed-engineering-means/ 2026-11-12T23:54:41.318Z https://openai.com/index/chatgpt-expanding-world-of-work/ 2026-11-12T23:54:34.620Z h",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:34:33.651Z"
+      },
+      {
+        "url": "https://openai.com/sitemap.xml/api/",
+        "canonicalUrl": "https://openai.com/sitemap.xml/api/",
+        "title": "OpenAI (United States) — docs",
+        "snippet": "https://openai.com/index/openai-gtm-assistant/ 2026-11-09T23:03:23.627Z https://openai.com/index/cred-swamy-seetharaman/ 2026-11-09T23:03:15.387Z https://openai.com/index/openai-research-assistant/ 2026-11-09T22:51:30.280Z https://openai.com/index/building-ope",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:34:33.664Z"
+      },
+      {
+        "url": "https://openai.com/sitemap.xml/global-affairs-news-listed/",
+        "canonicalUrl": "https://openai.com/sitemap.xml/global-affairs-news-listed/",
+        "title": "OpenAI (United States) — news",
+        "snippet": "https://openai.com/index/how-countries-can-end-the-capability-overhang/ 2026-11-10T09:52:42.387Z https://openai.com/index/equipping-workers-with-insights-about-compensation/ 2026-11-10T08:37:49.724Z https://openai.com/index/understanding-ai-and-learning-outcom",
+        "subpageType": "news",
+        "crawledAt": "2026-11-13T07:34:33.668Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:34:33.668Z",
+    "lastVerifiedAt": "2026-11-13T07:34:33.668Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "government of tamil nadu",
+    "name": "Government of Tamil Nadu",
+    "entityType": "government_department",
+    "aliases": [
+      "Tamil Nadu Government",
+      "TNG",
+      "TN",
+      "Government of Tamil Nadu"
+    ],
+    "country": "India",
+    "region": "Tamil Nadu",
+    "location": "Chennai",
+    "officialUrl": "http://www.tn.gov.in/",
+    "officialDomain": "tn.gov.in",
+    "confidence": 0.94,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "domain_matches_entity_identity",
+      "verified_institutional_tld"
+    ],
+    "internalPages": [],
+    "discoveredAt": "2026-11-13T07:34:42.087Z",
+    "lastVerifiedAt": "2026-11-13T07:34:42.087Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "react",
+    "name": "React",
+    "entityType": "company",
+    "aliases": [
+      "React"
+    ],
+    "officialUrl": "https://react.dev/",
+    "officialDomain": "react.dev",
+    "confidence": 0.76,
+    "verifiedBy": [
+      "wikidata_p856"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(wikidata_p856)",
+      "live_page_identifies_organization",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://react.dev/reference/react",
+        "canonicalUrl": "https://react.dev/reference/react",
+        "title": "React Reference Overview – React",
+        "snippet": "React Reference Overview – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog react@19.3 Overview Hooks useActionState useCallback useContext useDebugValue useDeferredValue useEffect useEffectEvent useId useImperativeHandle useInsertionEffect us",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:46:26.640Z"
+      },
+      {
+        "url": "https://react.dev/reference/react-dom",
+        "canonicalUrl": "https://react.dev/reference/react-dom",
+        "title": "React DOM APIs – React",
+        "snippet": "React DOM APIs – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog react@19.3 Overview Hooks useActionState useCallback useContext useDebugValue useDeferredValue useEffect useEffectEvent useId useImperativeHandle useInsertionEffect useLayoutEff",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:46:26.648Z"
+      },
+      {
+        "url": "https://react.dev/blog",
+        "canonicalUrl": "https://react.dev/blog",
+        "title": "React Blog – React",
+        "snippet": "React Blog – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog Blog Copy page Copy React Blog This blog is the official source for the updates from the React team. Anything important, including release notes or deprecation notices, will be post",
+        "subpageType": "news",
+        "crawledAt": "2026-11-13T07:46:26.657Z"
+      },
+      {
+        "url": "https://react.dev/community/docs-contributors",
+        "canonicalUrl": "https://react.dev/community/docs-contributors",
+        "title": "Docs Contributors – React",
+        "snippet": "Docs Contributors – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog GET INVOLVED Community React Conferences React Meetups React Videos Meet the Team Docs Contributors Translations Acknowledgements Versioning Policy Community Copy page Copy D",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:46:26.661Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:46:26.661Z",
+    "lastVerifiedAt": "2026-11-13T07:46:26.661Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "python",
+    "name": "Python",
+    "entityType": "organization",
+    "aliases": [
+      "Python official",
+      "PO",
+      "Python"
+    ],
+    "country": "United States",
+    "region": "Oregon",
+    "location": "Beaverton",
+    "officialUrl": "https://www.python.org/",
+    "officialDomain": "python.org",
+    "confidence": 0.84,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.python.org/doc/",
+        "canonicalUrl": "https://www.python.org/doc/",
+        "title": "Our Documentation | Python.org",
+        "snippet": "The official home of the Python Programming Language",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:46:29.267Z"
+      },
+      {
+        "url": "https://www.python.org/about/",
+        "canonicalUrl": "https://www.python.org/about/",
+        "title": "About Python&trade; | Python.org",
+        "snippet": "The official home of the Python Programming Language",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:46:29.268Z"
+      },
+      {
+        "url": "https://www.python.org/about/apps/",
+        "canonicalUrl": "https://www.python.org/about/apps/",
+        "title": "Applications for Python | Python.org",
+        "snippet": "The official home of the Python Programming Language",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:46:29.271Z"
+      },
+      {
+        "url": "https://www.python.org/about/quotes/",
+        "canonicalUrl": "https://www.python.org/about/quotes/",
+        "title": "Quotes about Python | Python.org",
+        "snippet": "The official home of the Python Programming Language",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T07:46:29.511Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:46:29.511Z",
+    "lastVerifiedAt": "2026-11-13T07:46:29.511Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "nvidia rtx",
+    "name": "Nvidia RTX",
+    "entityType": "company",
+    "aliases": [
+      "NVIDIA RTX architecture",
+      "NRA",
+      "NVIDIA",
+      "N.V.I.D.I.A",
+      "N.V.I.D.I.A.",
+      "RTX",
+      "R.T.X",
+      "R.T.X.",
+      "Nvidia RTX"
+    ],
+    "country": "Italy",
+    "region": "Lombardy",
+    "location": "Milan",
+    "officialUrl": "https://www.nvidia.com/it-it/",
+    "officialDomain": "nvidia.com",
+    "confidence": 0.84,
+    "verifiedBy": [
+      "ror_registry",
+      "wikidata_p856",
+      "wikipedia_extlink"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(ror_registry,wikidata_p856,wikipedia_extlink)",
+      "wikipedia_external_reference",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://www.nvidia.com/it-it/geforce/technologies/reflex/",
+        "canonicalUrl": "https://www.nvidia.com/it-it/geforce/technologies/reflex/",
+        "title": "Tecnologia Reflex 2 | NVIDIA",
+        "snippet": "NVIDIA Reflex 2 introduce il Frame Warp (disponibile a breve), che riduce ulteriormente la latenza in base all’ultimo input del mouse durante il gioco.",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:46:35.740Z"
+      },
+      {
+        "url": "https://developer.nvidia.com/topics/ai/data-science/cuda-x-for-data-science",
+        "canonicalUrl": "https://developer.nvidia.com/topics/ai/data-science/cuda-x-for-data-science",
+        "title": "CUDA-X Data Science Libraries | NVIDIA Developer",
+        "snippet": "A collection of open-source libraries that accelerate popular data science libraries and platforms on NVIDIA GPUs through CUDA primitives and algorithms.",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T07:46:36.807Z"
+      },
+      {
+        "url": "https://www.nvidia.com/it-it/data-center/colocation-partners/",
+        "canonicalUrl": "https://www.nvidia.com/it-it/data-center/colocation-partners/",
+        "title": "Data center di colocazione pronti per DGX | NVIDIA",
+        "snippet": "Sfrutta i centri più efficienti dal punto di vista energetico e ad alte prestazioni a livello globale, oltre a una vasta gamma di servizi, tra cui data center moderni, interconnettività e soluzioni di raffreddamento a liquido, per accelerare la scalabilità dell'IA nella tua organizzazione.",
+        "subpageType": "contact",
+        "crawledAt": "2026-11-13T07:46:36.836Z"
+      },
+      {
+        "url": "https://www.nvidia.com/it-it/solutions/autonomous-vehicles/ai-training/",
+        "canonicalUrl": "https://www.nvidia.com/it-it/solutions/autonomous-vehicles/ai-training/",
+        "title": "Sviluppo di modelli per robotaxi e veicoli autonomi | NVIDIA",
+        "snippet": "Soluzioni end-to-end per lo sviluppo di robotaxi e veicoli autonomi sicuri e intelligenti.",
+        "subpageType": "placements",
+        "crawledAt": "2026-11-13T07:46:37.212Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T07:46:37.212Z",
+    "lastVerifiedAt": "2026-11-13T07:46:37.212Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "hs ai solutions",
+    "name": "HS AI Solutions",
+    "entityType": "company",
+    "aliases": [
+      "HS AI Solutions",
+      "HS AI Studio",
+      "HS AI",
+      "HS AI Solutions Inc",
+      "hs-ai-studio-4i7i.vercel.app",
+      "hs ai studio 4i7i vercelapp",
+      "Harshan Seliyan",
+      "Harshan Seliyan B S"
+    ],
+    "officialUrl": "https://hs-ai-studio-4i7i.vercel.app/",
+    "officialDomain": "hs-ai-studio-4i7i.vercel.app",
+    "confidence": 0.97,
+    "verifiedBy": [
+      "pendulum_verified_store",
+      "direct_url_live_fetch"
+    ],
+    "signals": [
+      "direct_url_live_fetch",
+      "domain_matches_entity_identity",
+      "live_http_200"
+    ],
+    "internalPages": [
+      {
+        "url": "https://hs-ai-studio-4i7i.vercel.app/products/pendulum",
+        "canonicalUrl": "https://hs-ai-studio-4i7i.vercel.app/products/pendulum",
+        "title": "Pendulum — Automated Private Browser — HS AI Solutions · Harshan Seliyan B S",
+        "snippet": "Pendulum — Automated Private Browser, Hybrid Autonomous Search Engine, and Private Research Suite by HS AI Solutions.",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T09:30:00.000Z"
+      },
+      {
+        "url": "https://hs-ai-studio-4i7i.vercel.app/products/july-llm",
+        "canonicalUrl": "https://hs-ai-studio-4i7i.vercel.app/products/july-llm",
+        "title": "July LLM — The Autonomous Multi-Model CLI Tool · HS AI Solutions · Harshan Seliyan B S",
+        "snippet": "July LLM — The Autonomous Multi-Model CLI Tool with Instant One-Liner PowerShell Launch & Ephemeral RAM Privacy by HS AI Solutions.",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T09:30:00.000Z"
+      },
+      {
+        "url": "https://hs-ai-studio-4i7i.vercel.app/products/gravity-llm",
+        "canonicalUrl": "https://hs-ai-studio-4i7i.vercel.app/products/gravity-llm",
+        "title": "Gravity LLM — Private. Blazing Fast. Fully Autonomous. — HS AI Solutions · Harshan Seliyan B S",
+        "snippet": "Gravity LLM — The Next-Generation Local Intelligence Engine with 44 Built-in Tools, Instant GPU Acceleration, and Zero Cloud Dependency.",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T09:30:00.000Z"
+      },
+      {
+        "url": "https://hs-ai-studio-4i7i.vercel.app/journey",
+        "canonicalUrl": "https://hs-ai-studio-4i7i.vercel.app/journey",
+        "title": "Journey — HS AI Solutions · Harshan Seliyan B S",
+        "snippet": "The story and engineering journey of HS AI Solutions and founder Harshan Seliyan B S.",
+        "subpageType": "about",
+        "crawledAt": "2026-11-13T09:30:00.000Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T09:30:00.000Z",
+    "lastVerifiedAt": "2026-11-13T09:30:00.000Z",
+    "isValid": true
+  },
+  {
+    "entityKey": "reactdev",
+    "name": "react.dev",
+    "entityType": "website_service",
+    "aliases": [
+      "react.dev",
+      "https://react.dev/"
+    ],
+    "officialUrl": "https://react.dev/",
+    "officialDomain": "react.dev",
+    "confidence": 0.76,
+    "verifiedBy": [
+      "direct_url_live_fetch"
+    ],
+    "signals": [
+      "authoritative_registry_linkage(direct_url_live_fetch)",
+      "domain_matches_entity_identity"
+    ],
+    "internalPages": [
+      {
+        "url": "https://react.dev/blog/2026/02/24/the-react-foundation",
+        "canonicalUrl": "https://react.dev/blog/2026/02/24/the-react-foundation",
+        "title": "The React Foundation: A New Home for React Hosted by the Linux Foundation – React",
+        "snippet": "The React Foundation: A New Home for React Hosted by the Linux Foundation – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog Blog Copy page Copy The React Foundation: A New Home for React Hosted by the Linux Foundation February 24, 2026 by Mat",
+        "subpageType": "news",
+        "crawledAt": "2026-11-13T09:42:42.831Z"
+      },
+      {
+        "url": "https://react.dev/reference/react",
+        "canonicalUrl": "https://react.dev/reference/react",
+        "title": "React Reference Overview – React",
+        "snippet": "React Reference Overview – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog react@19.3 Overview Hooks useActionState useCallback useContext useDebugValue useDeferredValue useEffect useEffectEvent useId useImperativeHandle useInsertionEffect us",
+        "subpageType": "docs",
+        "crawledAt": "2026-11-13T09:42:42.835Z"
+      },
+      {
+        "url": "https://react.dev/blog",
+        "canonicalUrl": "https://react.dev/blog",
+        "title": "React Blog – React",
+        "snippet": "React Blog – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog Blog Copy page Copy React Blog This blog is the official source for the updates from the React team. Anything important, including release notes or deprecation notices, will be post",
+        "subpageType": "news",
+        "crawledAt": "2026-11-13T09:42:42.839Z"
+      },
+      {
+        "url": "https://react.dev/blog/2026/09/09/react-19-3",
+        "canonicalUrl": "https://react.dev/blog/2026/09/09/react-19-3",
+        "title": "React 19.3 – React",
+        "snippet": "React 19.3 – React React v 19.3 Search ⌘ Ctrl K Learn Reference Community Blog Blog Copy page Copy React 19.3 September 9, 2026 by The React Team React 19.3 is now available on npm! Last year , we shared View Transitions and Fragment Refs as new experimental A",
+        "subpageType": "news",
+        "crawledAt": "2026-11-13T09:42:42.856Z"
+      }
+    ],
+    "discoveredAt": "2026-11-13T09:42:42.856Z",
+    "lastVerifiedAt": "2026-11-13T09:42:42.856Z",
+    "isValid": true
+  }
+]

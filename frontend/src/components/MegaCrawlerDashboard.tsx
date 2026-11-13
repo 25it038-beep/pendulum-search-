@@ -231,7 +231,15 @@ export const MegaCrawlerDashboard: React.FC<MegaCrawlerDashboardProps> = ({ onCl
               </span>
             </div>
             <p className="text-xs text-neutral-400 mt-0.5 font-mono">
-              HS AI Solutions • Harshan Seliyan • Autonomous Multi-Engine Distributed Search Infrastructure
+              <a
+                href="https://hs-ai-studio-4i7i.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-gold-300 hover:underline transition-colors"
+              >
+                HS AI Solutions
+              </a>{' '}
+              • Harshan Seliyan • Autonomous Multi-Engine Distributed Search Infrastructure
             </p>
           </div>
         </div>
