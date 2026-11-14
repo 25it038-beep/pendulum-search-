@@ -3,9 +3,18 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+
   body {
-    @apply bg-obsidian-950 text-neutral-200 antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply bg-obsidian-950 text-[#f3f0e9] antialiased;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 50% 6%, rgba(210, 180, 119, 0.1), transparent 40%),
+      radial-gradient(ellipse at 95% 88%, rgba(87, 108, 139, 0.06), transparent 36%);
+    background-attachment: fixed;
   }
 }
 
@@ -16,16 +25,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0B0E;
+  background: #090a0c;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #252532;
+  background: #282d35;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4AF37;
+  background: #d2b477;
 }
 
 .scrollbar-none::-webkit-scrollbar {
@@ -34,4 +43,58 @@
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Leaflet Dark Theme Popups & Tooltips */
+.leaflet-container {
+  background: #0d0f13;
+  font-family: "DM Sans", sans-serif;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #111316 !important;
+  color: #f3f0e9 !important;
+  border: 1px solid rgba(210, 180, 119, 0.25);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55) !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+}
+.leaflet-control-attribution {
+  background: rgba(9, 10, 12, 0.78) !important;
+  color: #9a9da3 !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+  color: #d2b477 !important;
+}
+
+/* Markdown Tables inside July AI Overview */
+.pendulum-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+  overflow-x: auto;
+  display: block;
+}
+.pendulum-markdown th,
+.pendulum-markdown td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  text-align: left;
+}
+.pendulum-markdown th {
+  color: #f0dcae;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

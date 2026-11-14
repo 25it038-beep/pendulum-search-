@@ -284,7 +284,10 @@ async def perform_search_post(
     mode = type_mode_map.get(raw_type, "general")
     category_filter = "commerce" if raw_type == "shopping" else None
 
-    # Concurrently run native index search, DuckDuckGo Instant Answers, and media preview discovery
+    # Concurrently run native index search and partner instant answers; only invoke media previews on explicit media intent
+    has_video_intent = any(w in q.lower().split() for w in ("video", "videos", "watch", "clip", "clips", "documentary", "lecture", "lectures", "trailer", "trailers"))
+    has_image_intent = any(w in q.lower().split() for w in ("image", "images", "photo", "photos", "picture", "pictures", "wallpaper", "wallpapers", "diagram", "diagrams", "screenshot", "screenshots"))
+
     native_task = asyncio.create_task(search_scorer.execute_search(
         query=q,
         mode=mode,
@@ -293,8 +296,16 @@ async def perform_search_post(
         category_filter=category_filter
     ))
     ddg_task = asyncio.create_task(instant_answer_provider.search(query=q, limit=4))
-    video_preview_task = asyncio.create_task(video_search_provider.search(query=q, limit=2))
-    image_preview_task = asyncio.create_task(image_search_provider.search(query=q, limit=4))
+
+    async def _empty_list():
+        return []
+
+    video_preview_task = asyncio.create_task(
+        video_search_provider.search(query=q, limit=2) if has_video_intent else _empty_list()
+    )
+    image_preview_task = asyncio.create_task(
+        image_search_provider.search(query=q, limit=4) if has_image_intent else _empty_list()
+    )
 
     raw_responses = await asyncio.gather(
         native_task,
@@ -306,8 +317,8 @@ async def perform_search_post(
 
     search_data = raw_responses[0] if isinstance(raw_responses[0], dict) else {"results": [], "total_results": 0, "execution_time_ms": 0}
     ddg_results = raw_responses[1] if isinstance(raw_responses[1], list) else []
-    preview_videos = raw_responses[2] if isinstance(raw_responses[2], list) else []
-    preview_images = raw_responses[3] if isinstance(raw_responses[3], list) else []
+    preview_videos = raw_responses[2] if (has_video_intent and isinstance(raw_responses[2], list)) else []
+    preview_images = raw_responses[3] if (has_image_intent and isinstance(raw_responses[3], list)) else []
 
     # Format DuckDuckGo supplementary information cards
     formatted_ddg = []

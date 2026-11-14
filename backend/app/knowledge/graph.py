@@ -15,42 +15,42 @@ logger = logging.getLogger(__name__)
 INITIAL_ENTITIES = [
     {
         "entity_id": "harshan_seliyan",
-        "name": "Harshan Seliyan",
+        "name": "Harshan Seliyan B S",
         "entity_type": "person",
-        "description": "Founder and Chief Architect of HS AI Solutions, creator of HS SEARCH.",
-        "aliases": ["Harshan", "H. Seliyan", "Founder of HS AI Solutions"],
+        "description": "Founder and Chief Architect of HS AI Solutions (HS AI Studio), creator of Pendulum, July LLM, and Gravity LLM.",
+        "aliases": ["Harshan", "Harshan Seliyan", "H. Seliyan", "Founder of HS AI Solutions"],
         "metadata": {"role": "Founder", "organization": "HS AI Solutions"},
-        "source_url": "https://hsaisolutions.com/founder",
+        "source_url": "https://hs-ai-studio-4i7i.vercel.app/journey",
         "credibility": 1.0
     },
     {
         "entity_id": "hs_ai_solutions",
         "name": "HS AI Solutions",
         "entity_type": "company",
-        "description": "Pioneering AI research and development company focused on autonomous search, artificial intelligence, and knowledge retrieval infrastructure.",
-        "aliases": ["HS AI", "HS AI Solutions Inc."],
-        "metadata": {"founder": "Harshan Seliyan", "headquarters": "India"},
-        "source_url": "https://hsaisolutions.com",
+        "description": "AI research and engineering studio focused on autonomous search, July LLM, Gravity LLM, Pendulum, and knowledge retrieval infrastructure.",
+        "aliases": ["HS AI", "HS AI Studio", "HS AI Solutions Inc.", "hs-ai-studio-4i7i.vercel.app"],
+        "metadata": {"founder": "Harshan Seliyan B S", "headquarters": "India"},
+        "source_url": "https://hs-ai-studio-4i7i.vercel.app/",
         "credibility": 1.0
     },
     {
         "entity_id": "hs_search",
-        "name": "HS SEARCH",
+        "name": "Pendulum (HS SEARCH)",
         "entity_type": "product",
-        "description": "An independent, real-time, AI-powered global search engine with autonomous crawling, neural indexing, and verifiable intelligence.",
-        "aliases": ["HS Search Engine", "HSSearch"],
+        "description": "Automated private browser and real-time, AI-powered global search engine with autonomous crawling, hybrid indexing, and verifiable intelligence.",
+        "aliases": ["HS Search Engine", "HSSearch", "Pendulum", "Pendulum Search"],
         "metadata": {"technology": "AsyncIO, FTS5, Qdrant, Vector Embeddings", "ai_model": "July LLM"},
-        "source_url": "https://hsaisolutions.com/products/hs-search",
+        "source_url": "https://hs-ai-studio-4i7i.vercel.app/products/pendulum",
         "credibility": 1.0
     },
     {
         "entity_id": "july_llm",
         "name": "July LLM",
         "entity_type": "technology",
-        "description": "Proprietary AI intelligence model family powering HS SEARCH for rapid query understanding, grounded summaries, and citation synthesis.",
-        "aliases": ["July AI", "July Model", "HS-July-Fast"],
+        "description": "Autonomous multi-model CLI and grounded search reasoning engine powering HS SEARCH and HS AI Solutions.",
+        "aliases": ["July AI", "July Model", "HS-July-Fast", "Gravity LLM"],
         "metadata": {"organization": "HS AI Solutions", "type": "Language Model"},
-        "source_url": "https://hsaisolutions.com/ai/july",
+        "source_url": "https://hs-ai-studio-4i7i.vercel.app/products/july-llm",
         "credibility": 1.0
     },
     {

@@ -67,6 +67,8 @@ class HybridSearchResponse(BaseModel):
     executionTimeMs: float
     page: int
     limit: int
+    attribution: Dict[str, Any] = Field(default_factory=dict)
+    sourcesUsed: List[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -267,6 +269,20 @@ async def hybrid_search(
     if new_external_urls:
         background_tasks.add_task(_expand_index, new_external_urls, query)
 
+    ddg_count = sum(1 for r in page_results if "external" in r.sources)
+    enhanced_count = sum(1 for r in page_results if r.source_label == "DuckDuckGo · Pendulum Enhanced")
+    telemetry = duckduckgo_web_provider.get_last_telemetry(query)
+    mode_label = (
+        "duckduckgo_organic_plus_pendulum"
+        if telemetry.get("has_full_organic_results")
+        else "duckduckgo_ia_plus_pendulum"
+    )
+    sources_used = []
+    if enable_external or external_results_raw:
+        sources_used.append("DuckDuckGo (Primary)")
+    if enable_pendulum or enhanced_count > 0:
+        sources_used.append("Pendulum Enhancement & Index")
+
     return HybridSearchResponse(
         query=query,
         cleanQuery=query,
@@ -277,13 +293,22 @@ async def hybrid_search(
             "algorithm": "RRF+WeightedScore",
             "version": "1.0",
             "weights": hybrid_ranker.weights,
-            "pendulumWeight": getattr(settings, "PENDULUM_PROVIDER_WEIGHT", 1.20),
-            "externalWeight": getattr(settings, "DDG_PROVIDER_WEIGHT", 1.00),
+            "pendulumWeight": getattr(settings, "PENDULUM_PROVIDER_WEIGHT", 1.15),
+            "externalWeight": getattr(settings, "DDG_PROVIDER_WEIGHT", 1.25),
         },
         partial=partial,
         executionTimeMs=execution_ms,
         page=req.page,
         limit=opts.limit,
+        attribution={
+            "primaryProvider": "DuckDuckGo",
+            "enhancementEngine": "Pendulum Search",
+            "badgeText": "Based on DuckDuckGo results · Enhanced by Pendulum",
+            "mode": mode_label,
+            "duckduckgoResultsCount": ddg_count,
+            "pendulumEnhancedCount": enhanced_count,
+        },
+        sourcesUsed=sources_used,
     )
 
 
@@ -315,10 +340,12 @@ async def search_dashboard():
             "cacheHits": ext_health.get("cache_hits", 0),
             "cacheSize": ext_health.get("cache_size", 0),
             "searxngConfigured": ext_health.get("searxng_configured", False),
+            "primaryOrganicConfigured": ext_health.get("primary_organic_configured", False),
             "lastLatencyMs": ext_health.get("last_latency_ms", 0),
             "failedCalls": ext_health.get("failed_calls", 0),
+            "lastTelemetry": ext_health.get("last_telemetry", {}),
             "type": "external",
-            "description": "External supplementary search (SearXNG / Instant Answer API)",
+            "description": "Primary organic web search (SearXNG / API) & instant knowledge supplement",
         }
     except Exception as exc:
         provider_health["external"] = {"healthy": False, "error": str(exc)}
@@ -327,6 +354,7 @@ async def search_dashboard():
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "stats": hybrid_ranker_stats.to_dict(),
         "providers": provider_health,
+        "primaryProviderTelemetry": duckduckgo_web_provider.get_last_telemetry(),
         "rankingWeights": hybrid_ranker.weights,
         "config": {
             "pendulumWeight": getattr(settings, "PENDULUM_PROVIDER_WEIGHT", 1.20),

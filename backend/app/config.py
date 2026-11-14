@@ -81,7 +81,10 @@ class Settings(BaseSettings):
 
     # Hybrid Search Engine Settings
     SEARXNG_URL: str = os.getenv("SEARXNG_URL", "")          # Optional self-hosted SearXNG
+    SEARXNG_ENGINES: str = os.getenv("SEARXNG_ENGINES", "")  # Optional engine override (e.g. duckduckgo)
     SEARXNG_TIMEOUT_SEC: float = float(os.getenv("SEARXNG_TIMEOUT_SEC", "3.0"))
+    BRAVE_SEARCH_API_KEY: str = os.getenv("BRAVE_SEARCH_API_KEY", "")
+    SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")
     DDG_PROVIDER_WEIGHT: float = float(os.getenv("DDG_PROVIDER_WEIGHT", "1.00"))
     PENDULUM_PROVIDER_WEIGHT: float = float(os.getenv("PENDULUM_PROVIDER_WEIGHT", "1.20"))
     HYBRID_RANKING_WEIGHTS: dict = {

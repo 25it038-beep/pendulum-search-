@@ -40,7 +40,16 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-neutral-400 tracking-wider">
-              HS AI Solutions <span className="text-neutral-600">•</span> Harshan Seliyan
+              <a
+                href="https://hs-ai-studio-4i7i.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="hover:text-gold-300 transition-colors"
+              >
+                HS AI Solutions
+              </a>{' '}
+              <span className="text-neutral-600">•</span> Harshan Seliyan
             </p>
           </div>
         </div>

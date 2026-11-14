@@ -423,3 +423,318 @@ export type StreamEvent =
   | { type: 'done'; total: number; sources: string[]; execution_time_ms: number }
   | { type: 'error'; message: string };
 
+// Unified Pendulum Search SPA Types
+export type PendulumCategory =
+  | 'All'
+  | 'Images'
+  | 'Videos'
+  | 'News'
+  | 'Maps'
+  | 'Shopping'
+  | 'Books'
+  | 'Research';
+
+export type PendulumSort = 'relevance' | 'latest' | 'local';
+
+export type TimeRangeFilter = 'any' | 'hour' | 'day' | 'week' | 'month' | 'year';
+
+export type AiModelSelection = 'auto' | 'july' | 'gravity';
+
+export interface PendulumUserSettings {
+  aiOverview: boolean;
+  aiModel: AiModelSelection;
+  limit: number;
+  safeSearch: boolean;
+  locationEnabled: boolean;
+  city: string;
+  country: string;
+  lat?: number;
+  lon?: number;
+}
+
+export interface PendulumSearchHistoryEntry {
+  query: string;
+  category: PendulumCategory;
+  timestamp: string;
+}
+
+export interface PendulumResultItem {
+  id: string;
+  title: string;
+  url: string;
+  canonicalUrl?: string;
+  snippet: string;
+  domain: string;
+  publishedAt?: string | null;
+  indexedAt?: string | null;
+  published_str?: string;
+  indexed_str?: string;
+  sourceLabel?: string;
+  original_publisher?: string;
+  favicon?: string;
+  category?: string;
+  isLive?: boolean;
+  isOfficialWebsite?: boolean;
+  isOfficialSubpage?: boolean;
+  officialConfidence?: number;
+  officialOrganizationName?: string;
+  officialVerifiedBy?: string[];
+  sourceClass?: string;
+  discoveredSubpageType?: string;
+  location?: {
+    lat?: number;
+    lon?: number;
+    address?: string;
+    city?: string;
+    locality?: string;
+    region?: string;
+    country?: string;
+    operating_hours?: string;
+    verified_status?: string;
+    coordinates?: { lat: number; lon: number };
+  };
+  distanceKm?: number;
+  distance_str?: string;
+  scores?: {
+    lexical?: number;
+    semantic?: number;
+    freshness?: number;
+    authority?: number;
+    geographic?: number;
+    rrf?: number;
+    quality?: number;
+    final?: number;
+  };
+  media?: {
+    images?: Array<{ src: string; alt?: string; title?: string; width?: number; height?: number }>;
+    videos?: Array<{ src: string; type?: string; title?: string; embedUrl?: string; duration?: string }>;
+  };
+}
+
+export interface PendulumRecognizedEntity {
+  name: string;
+  normalizedName: string;
+  entityType: string;
+  country?: string;
+  region?: string;
+  location?: string;
+  abbreviations?: string[];
+  alternativeNames?: string[];
+  targetSubpageIntent?: string;
+  isSpecificEntityQuery: boolean;
+  isAmbiguous: boolean;
+  confidence: number;
+  possibleMatches?: Array<{
+    name: string;
+    entityType?: string;
+    officialDomain?: string;
+    officialUrl?: string;
+    country?: string;
+    region?: string;
+    location?: string;
+    description?: string;
+    confidence: number;
+  }>;
+  verifiedOfficialWebsite?: {
+    domain: string;
+    url: string;
+    organizationName?: string;
+    confidence: number;
+    verifiedBy: string[];
+  };
+}
+
+export interface PendulumCitation {
+  id?: string;
+  index: number;
+  title: string;
+  url: string;
+  domain: string;
+  favicon?: string;
+  snippet?: string;
+  publishedAt?: string | null;
+  sourceLabel?: string;
+  isOfficialWebsite?: boolean;
+  sourceClass?: string;
+}
+
+export interface PendulumOverview {
+  answer: string;
+  directAnswer?: string;
+  keyPoints?: string[];
+  confidence?: 'high' | 'medium' | 'low';
+  layoutType?: string;
+  modelUsed?: string;
+  modelLabel?: string;
+  disagreements?: string | string[] | null;
+  insufficientEvidence?: boolean;
+  relatedQuestions?: string[];
+}
+
+export type AiFollowupStyle = 'auto' | 'concise' | 'detailed' | 'compare';
+
+export interface PendulumFollowupTurn {
+  id: string;
+  question: string;
+  resolvedQuery?: string;
+  usedContextRewrite?: boolean;
+  answer: string;
+  directAnswer?: string;
+  keyPoints?: string[];
+  confidence?: 'high' | 'medium' | 'low';
+  modelUsed?: string;
+  modelLabel?: string;
+  style?: AiFollowupStyle;
+  disagreements?: string | string[] | null;
+  insufficientEvidence?: boolean;
+  sources: PendulumCitation[];
+  relatedQuestions?: string[];
+  isStreaming?: boolean;
+  error?: string | null;
+  createdAt: string;
+}
+
+export interface PendulumFollowupResponse {
+  query: string;
+  originalQuery: string;
+  resolvedQuery?: string;
+  usedContextRewrite?: boolean;
+  overview: PendulumOverview;
+  sources: PendulumCitation[];
+  relatedQuestions?: string[];
+  modelUsed?: string;
+  modelLabel?: string;
+  media?: {
+    images?: Array<any>;
+    videos?: Array<any>;
+  };
+}
+
+export interface PendulumVideoItem {
+  id: string;
+  title: string;
+  description?: string;
+  publisher?: string;
+  sourceDomain?: string;
+  sourceProvider?: string;
+  duration?: string;
+  publishedAt?: string | null;
+  publishedTime?: string;
+  views?: string;
+  verifiedChannel?: boolean;
+  thumbnailUrl?: string;
+  playerType: 'youtube' | 'html5' | 'iframe';
+  embedUrl?: string;
+  mediaUrl?: string;
+  qualities?: Array<{ label: string; url: string; mimeType?: string }>;
+  watchUrl: string;
+  embedAllowed?: boolean;
+}
+
+export interface PendulumImageItem {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  originalUrl: string;
+  sourceUrl: string;
+  creator?: string;
+  license?: string;
+  domain?: string;
+  width?: number;
+  height?: number;
+  provider?: string;
+  sourceProvider?: string;
+  downloadPermitted?: boolean;
+}
+
+export interface PendulumMapPlace {
+  id: string;
+  name: string;
+  displayName?: string;
+  category?: string;
+  lat: number;
+  lon: number;
+  address?: string;
+  openingHours?: string;
+  website?: string;
+  phone?: string;
+  distanceKm?: number;
+  source?: string;
+  sourceUrl?: string;
+  sourceProvider?: string;
+  domain?: string;
+  details?: Record<string, any>;
+}
+
+export interface PendulumDirections {
+  available?: boolean;
+  distanceKm: number;
+  durationMin: number | null;
+  mode: 'driving' | 'foot' | 'bike';
+  coordinates: Array<[number, number]>;
+  steps: Array<{ instruction: string; distanceM: number; durationSec?: number }>;
+  externalDirectionsUrl?: string;
+  provider?: string;
+  error?: string;
+}
+
+export interface PendulumSearchAttribution {
+  primaryProvider: string;
+  enhancementEngine: string;
+  badgeText: string;
+  mode?: string;
+  duckduckgoResultsCount?: number;
+  pendulumEnhancedCount?: number;
+}
+
+export interface PendulumUnifiedResponse {
+  query: string;
+  correctedQueryHint?: string;
+  query_intent?: string;
+  recognized_entity?: PendulumRecognizedEntity;
+  attribution?: PendulumSearchAttribution;
+  sources_used?: string[];
+  results: PendulumResultItem[];
+  total: number;
+  partial?: boolean;
+  timeRange?: TimeRangeFilter;
+  execution_time_ms?: number;
+  deduplication?: {
+    rawTotal: number;
+    uniqueTotal: number;
+    duplicatesRemoved: number;
+    duplicatePercentage?: number;
+  };
+  providers?: Record<string, { status: string; count: number; latencyMs?: number }>;
+  overview?: PendulumOverview | null;
+  answer?: string | null;
+  sources?: PendulumCitation[];
+  relatedQuestions?: string[];
+  ai_intelligence?: {
+    knowledge_graph_card?: KnowledgeGraphCard;
+    confidence_score?: number;
+    direct_answer?: string;
+  } | null;
+  geo_metadata?: {
+    is_geo_query?: boolean;
+    intent_type?: string;
+    target_place?: string;
+    target_lat?: number;
+    target_lon?: number;
+  };
+  media?: {
+    images?: Array<any>;
+    videos?: Array<any>;
+    maps?: Array<{ title: string; url: string; lat: number; lon: number; address?: string; distanceKm?: number }>;
+  };
+}
+
+export interface SavedSearchResultItem {
+  id?: number;
+  url: string;
+  title: string;
+  snippet?: string;
+  domain?: string;
+  category?: string;
+  createdAt?: string;
+}
