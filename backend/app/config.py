@@ -10,7 +10,10 @@ from pydantic_settings import BaseSettings
 from typing import List
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
+
+# Support Railway persistent volume at /app/data, or custom DATA_DIR env var
+_data_dir_env = os.getenv("DATA_DIR", "")
+DATA_DIR = Path(_data_dir_env) if _data_dir_env else BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True, parents=True)
 
 class Settings(BaseSettings):
@@ -23,11 +26,11 @@ class Settings(BaseSettings):
 
     # Server settings
     HOST: str = os.getenv("HS_HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("HS_PORT", "8000"))
+    PORT: int = int(os.getenv("PORT", os.getenv("HS_PORT", "8000")))
     DEBUG: bool = os.getenv("HS_DEBUG", "True").lower() == "true"
     CORS_ORIGINS: List[str] = ["*"]
 
-    # Storage paths
+    # Storage paths — use DATA_DIR (supports Railway /app/data volume)
     DB_PATH: Path = DATA_DIR / "hs_search.db"
     VECTOR_STORE_PATH: Path = DATA_DIR / "vector_store.npz"
 

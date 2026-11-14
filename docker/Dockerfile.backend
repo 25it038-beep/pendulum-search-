@@ -1,4 +1,4 @@
-# HS SEARCH - Backend Container
+# HS SEARCH - Backend Container (Railway-optimised)
 # Company: HS AI Solutions
 # Founder: Harshan Seliyan
 
@@ -6,23 +6,28 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# Install Python dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy application source
 COPY backend/ .
+
+# Create persistent data directory (mapped to Railway volume)
+RUN mkdir -p /app/data
 
 EXPOSE 8000
 
 ENV PYTHONUNBUFFERED=1
 ENV HS_HOST=0.0.0.0
 ENV HS_PORT=8000
+ENV HS_DEBUG=false
 
-CMD ["python", "run_backend.py"]
+# Use Railway's $PORT if set, otherwise default to 8000
+CMD sh -c "python run_backend.py --port ${PORT:-8000}"
