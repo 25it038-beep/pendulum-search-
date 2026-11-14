@@ -1,30 +1,34 @@
 {
-  "name": "pendulum-search",
-  "private": true,
-  "version": "1.0.0",
-  "workspaces": [
-    "frontend"
-  ],
-  "scripts": {
-    "dev": "tsx server.ts",
-    "build": "npm --workspace frontend run build",
-    "lint": "./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json --noEmit",
-    "start": "NODE_ENV=production tsx server.ts",
-    "preview": "npm --workspace frontend run preview -- --host 0.0.0.0",
-    "test": "tsx --test server/tests/*.test.ts",
-    "benchmark": "tsx server/eval/benchmark.ts"
-  },
-  "dependencies": {
-    "@google/genai": "^3.3.0",
-    "@types/express": "^5.0.6",
-    "@types/pg": "^8.23.1",
-    "dotenv": "^18.0.10",
-    "drizzle-kit": "^0.31.11",
-    "drizzle-orm": "^0.45.4",
-    "express": "^5.3.0",
-    "firebase": "^13.3.0",
-    "firebase-admin": "^14.5.1",
-    "pg": "^8.23.1",
-    "tsx": "^4.23.15"
-  }
+    "name":  "pendulum-search",
+    "private":  true,
+    "version":  "1.0.0",
+    "workspaces":  [
+                       "frontend"
+                   ],
+    "scripts":  {
+                    "dev":  "tsx server.ts",
+                    "build":  "npm --workspace frontend run build",
+                    "lint":  "./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json --noEmit",
+                    "start":  "NODE_ENV=production tsx server.ts",
+                    "preview":  "npm --workspace frontend run preview -- --host 0.0.0.0",
+                    "test":  "tsx --test server/tests/*.test.ts",
+                    "benchmark":  "tsx server/eval/benchmark.ts",
+                    "db:push":  "drizzle-kit push --config=src/db/drizzle.config.ts",
+                    "db:generate":  "drizzle-kit generate --config=src/db/drizzle.config.ts",
+                    "db:migrate":  "drizzle-kit migrate --config=src/db/drizzle.config.ts",
+                    "db:studio":  "drizzle-kit studio --config=src/db/drizzle.config.ts"
+                },
+    "dependencies":  {
+                         "@google/genai":  "^3.3.0",
+                         "@types/express":  "^5.0.6",
+                         "@types/pg":  "^8.23.1",
+                         "dotenv":  "^18.0.10",
+                         "drizzle-kit":  "^0.31.11",
+                         "drizzle-orm":  "^0.45.4",
+                         "express":  "^5.3.0",
+                         "firebase":  "^13.3.0",
+                         "firebase-admin":  "^14.5.1",
+                         "pg":  "^8.23.1",
+                         "tsx":  "^4.23.15"
+                     }
 }
